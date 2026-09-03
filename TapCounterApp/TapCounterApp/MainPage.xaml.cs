@@ -1,24 +1,30 @@
-﻿namespace TapCounterApp
+﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
+
+namespace TapCounterApp
 {
     public partial class MainPage : ContentPage
     {
-        int count = 0;
+
+        private int count = 0;
 
         public MainPage()
         {
             InitializeComponent();
         }
 
-        private void OnCounterClicked(object? sender, EventArgs e)
+        private async void OnCounterClicked(object sender, EventArgs e)
         {
             count++;
+            CounterBtn.Text = $"Clicked {count} times";
 
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
-
-            SemanticScreenReader.Announce(CounterBtn.Text);
+            if (count % 10 == 0)
+            {
+                string clickMessage = $"Congrats, you tapped {count} times!";
+                var toast = Toast.Make(clickMessage, ToastDuration.Short);
+                MilestoneDisplay.Text = ($"{clickMessage}");
+                await toast.Show();
+            }
         }
     }
 }

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TapCounterApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+f93e4de42489fd84c2b11411f9a4d776c61e8579")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+97062073228dcbaec3f21a060bbc2aa5d4a25abb")]
 [assembly: System.Reflection.AssemblyProductAttribute("TapCounterApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TapCounterApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
