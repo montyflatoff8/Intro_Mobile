@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="FiscApp.MainPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:FiscApp.Models"
+             BackgroundColor="#F5F6FA"
+             Title="Finance Tracker">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="20">
+
+            <!--  Goals section — front and center  -->
+            <Label Text="Your Goals"
+                   FontSize="20"
+                   FontAttributes="Bold" />
+
+            <CollectionView x:Name="GoalsView"
+                             ItemsSource="{Binding Goals}"
+                             HeightRequest="150">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:FinancialGoal">
+                        <Frame WidthRequest="180"
+                               Padding="14"
+                               CornerRadius="14"
+                               BackgroundColor="White"
+                               HasShadow="True">
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Name}"
+                                       FontAttributes="Bold"
+                                       FontSize="15" />
+                                <ProgressBar Progress="{Binding Progress}"
+                                             ProgressColor="#3D7BFF" />
+                                <Label Text="{Binding ProgressText}" FontSize="12" />
+                                <Label Text="{Binding RemainingText}"
+                                       FontSize="12"
+                                       TextColor="Gray" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <BoxView HeightRequest="1" Color="#E0E0E0" />
+
+            <!--  Transactions section — right underneath goals  -->
+            <Label Text="Transactions"
+                   FontSize="20"
+                   FontAttributes="Bold" />
+
+            <!--  Quick-add: open the app, log it, done  -->
+            <Frame Padding="14" CornerRadius="14" BackgroundColor="White" HasShadow="True">
+                <VerticalStackLayout Spacing="10">
+                    <Entry x:Name="DescriptionEntry" Placeholder="What was it for?" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Entry x:Name="AmountEntry"
+                               Grid.Column="0"
+                               Placeholder="Amount"
+                               Keyboard="Numeric" />
+
+                        <Picker x:Name="TypePicker"
+                                Grid.Column="1"
+                                Title="Type">
+                            <Picker.ItemsSource>
+                                <x:Array Type="{x:Type x:String}">
+                                    <x:String>Expense</x:String>
+                                    <x:String>Income</x:String>
+                                </x:Array>
+                            </Picker.ItemsSource>
+                        </Picker>
+                    </Grid>
+
+                    <Button Text="Add Transaction"
+                            Clicked="OnAddTransactionClicked"
+                            BackgroundColor="#3D7BFF"
+                            TextColor="White"
+                            CornerRadius="10" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!--  Recent transactions, most recent first  -->
+            <CollectionView x:Name="TransactionsView" ItemsSource="{Binding Transactions}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Transaction">
+                        <Grid Padding="4,10" ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="{Binding Description}" FontSize="15" />
+                                <Label Text="{Binding Date, StringFormat='{0:MMM d, h:mm tt}'}"
+                                       FontSize="12"
+                                       TextColor="Gray" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1"
+                                   Text="{Binding DisplayAmount}"
+                                   TextColor="{Binding AmountColor}"
+                                   FontAttributes="Bold"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
