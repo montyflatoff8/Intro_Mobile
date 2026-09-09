@@ -3,12 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C52E3EBA-976E-63B7-80D0-06633EC233FB}|TapCounterApp.csproj|c:\\users\\monty\\source\\repos\\intro_mobile\\tapcounterapp\\tapcounterapp\\mainpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{C52E3EBA-976E-63B7-80D0-06633EC233FB}|TapCounterApp.csproj|solutionrelative:mainpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+      "AbsoluteMoniker": "D:0:0:{C08218A2-680C-440B-8FEE-72E00520894E}|Solution Items{C08218A2-680C-440B-8FEE-72E00520894E}|C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\README.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{C08218A2-680C-440B-8FEE-72E00520894E}|Solution Items{C08218A2-680C-440B-8FEE-72E00520894E}|solutionrelative:README.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C52E3EBA-976E-63B7-80D0-06633EC233FB}|TapCounterApp.csproj|c:\\users\\monty\\source\\repos\\intro_mobile\\tapcounterapp\\tapcounterapp\\footerview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{C52E3EBA-976E-63B7-80D0-06633EC233FB}|TapCounterApp.csproj|solutionrelative:footerview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C52E3EBA-976E-63B7-80D0-06633EC233FB}|TapCounterApp.csproj|c:\\users\\monty\\source\\repos\\intro_mobile\\tapcounterapp\\tapcounterapp\\mainpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{C52E3EBA-976E-63B7-80D0-06633EC233FB}|TapCounterApp.csproj|solutionrelative:mainpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C52E3EBA-976E-63B7-80D0-06633EC233FB}|TapCounterApp.csproj|c:\\users\\monty\\source\\repos\\intro_mobile\\tapcounterapp\\tapcounterapp\\footerview.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -30,11 +34,37 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "README.md",
+              "DocumentMoniker": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\README.md",
+              "RelativeDocumentMoniker": "README.md",
+              "ToolTip": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\README.md",
+              "RelativeToolTip": "README.md",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAkwBUAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2026-09-03T01:54:31.438Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "MainPage.xaml",
+              "DocumentMoniker": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\MainPage.xaml",
+              "RelativeDocumentMoniker": "MainPage.xaml",
+              "ToolTip": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\MainPage.xaml",
+              "RelativeToolTip": "MainPage.xaml",
+              "ViewState": "AgIAACcAAAAAAAAAAAAAAAsAAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-09-02T19:45:13.584Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "FooterView.xaml.cs",
               "DocumentMoniker": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\FooterView.xaml.cs",
               "RelativeDocumentMoniker": "FooterView.xaml.cs",
@@ -60,20 +90,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "MainPage.xaml",
-              "DocumentMoniker": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\MainPage.xaml",
-              "RelativeDocumentMoniker": "MainPage.xaml",
-              "ToolTip": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\MainPage.xaml",
-              "RelativeToolTip": "MainPage.xaml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAeAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-09-02T19:45:13.584Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "MainPage.xaml.cs",
               "DocumentMoniker": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\MainPage.xaml.cs",
               "RelativeDocumentMoniker": "MainPage.xaml.cs",
@@ -86,7 +103,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "MauiProgram.cs",
               "DocumentMoniker": "C:\\Users\\monty\\source\\repos\\Intro_Mobile\\TapCounterApp\\TapCounterApp\\MauiProgram.cs",
               "RelativeDocumentMoniker": "MauiProgram.cs",

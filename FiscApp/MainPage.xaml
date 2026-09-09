@@ -22,23 +22,26 @@
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:FinancialGoal">
-                        <Frame WidthRequest="180"
-                               Padding="14"
-                               CornerRadius="14"
-                               BackgroundColor="White"
-                               HasShadow="True">
+                        <Border WidthRequest="180"
+                                Padding="14"
+                                BackgroundColor="White"
+                                Stroke="Transparent"
+                                StrokeShape="RoundRectangle 14">
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Opacity="0.15" Radius="12" Offset="0,4" />
+                            </Border.Shadow>
                             <VerticalStackLayout Spacing="8">
                                 <Label Text="{Binding Name}"
-                                       FontAttributes="Bold"
-                                       FontSize="15" />
+                                   FontAttributes="Bold"
+                                   FontSize="15" />
                                 <ProgressBar Progress="{Binding Progress}"
-                                             ProgressColor="#3D7BFF" />
+                                    ProgressColor="#3D7BFF" />
                                 <Label Text="{Binding ProgressText}" FontSize="12" />
                                 <Label Text="{Binding RemainingText}"
-                                       FontSize="12"
-                                       TextColor="Gray" />
+                                   FontSize="12"
+                                   TextColor="Gray" />
                             </VerticalStackLayout>
-                        </Frame>
+                        </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
@@ -51,19 +54,25 @@
                    FontAttributes="Bold" />
 
             <!--  Quick-add: open the app, log it, done  -->
-            <Frame Padding="14" CornerRadius="14" BackgroundColor="White" HasShadow="True">
+            <Border Padding="14"
+        BackgroundColor="White"
+        Stroke="Transparent"
+        StrokeShape="RoundRectangle 14">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Opacity="0.15" Radius="12" Offset="0,4" />
+                </Border.Shadow>
                 <VerticalStackLayout Spacing="10">
                     <Entry x:Name="DescriptionEntry" Placeholder="What was it for?" />
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                         <Entry x:Name="AmountEntry"
-                               Grid.Column="0"
-                               Placeholder="Amount"
-                               Keyboard="Numeric" />
+                           Grid.Column="0"
+                           Placeholder="Amount"
+                           Keyboard="Numeric" />
 
                         <Picker x:Name="TypePicker"
-                                Grid.Column="1"
-                                Title="Type">
+                            Grid.Column="1"
+                            Title="Type">
                             <Picker.ItemsSource>
                                 <x:Array Type="{x:Type x:String}">
                                     <x:String>Expense</x:String>
@@ -74,29 +83,46 @@
                     </Grid>
 
                     <Button Text="Add Transaction"
-                            Clicked="OnAddTransactionClicked"
-                            BackgroundColor="#3D7BFF"
-                            TextColor="White"
-                            CornerRadius="10" />
+                        Clicked="OnAddTransactionClicked"
+                        BackgroundColor="#3D7BFF"
+                        TextColor="White"
+                        CornerRadius="10" />
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
             <!--  Recent transactions, most recent first  -->
             <CollectionView x:Name="TransactionsView" ItemsSource="{Binding Transactions}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Transaction">
-                        <Grid Padding="4,10" ColumnDefinitions="*,Auto">
+                        <Grid Padding="4,10" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
                             <VerticalStackLayout Grid.Column="0">
                                 <Label Text="{Binding Description}" FontSize="15" />
                                 <Label Text="{Binding Date, StringFormat='{0:MMM d, h:mm tt}'}"
-                                       FontSize="12"
-                                       TextColor="Gray" />
+                                   FontSize="12"
+                                   TextColor="Gray" />
                             </VerticalStackLayout>
+
                             <Label Grid.Column="1"
-                                   Text="{Binding DisplayAmount}"
-                                   TextColor="{Binding AmountColor}"
-                                   FontAttributes="Bold"
-                                   VerticalOptions="Center" />
+                               Text="{Binding DisplayAmount}"
+                               TextColor="{Binding AmountColor}"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+
+                            <Button Grid.Column="2"
+                                Text="Edit"
+                                FontSize="12"
+                                Padding="10,4"
+                                Clicked="OnEditTransactionClicked"
+                                CommandParameter="{Binding .}" />
+
+                            <Button Grid.Column="3"
+                                Text="Delete"
+                                FontSize="12"
+                                Padding="10,4"
+                                BackgroundColor="#D64545"
+                                TextColor="White"
+                                Clicked="OnDeleteTransactionClicked"
+                                CommandParameter="{Binding .}" />
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
