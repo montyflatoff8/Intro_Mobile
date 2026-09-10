@@ -1,31 +1,27 @@
-﻿using FiscApp.Models;
-using System.Collections.ObjectModel;
-
+﻿using System.Collections.ObjectModel;
+using FiscApp.Models;
 
 namespace FiscApp;
 
+using FiscApp.Pages;
+using FiscApp.Services;
+
 public partial class MainPage : ContentPage
 {
-    public ObservableCollection<FinancialGoal> Goals { get; } = new();
-    public ObservableCollection<Transaction> Transactions { get; } = new();
+    private Transaction? editingTransaction;
 
-    public MainPage()
+    private readonly FinanceDataStore store;
+
+    public MainPage(FinanceDataStore store)
     {
+        this.store = store;
         InitializeComponent();
         BindingContext = this;
-        SeedSampleData();
     }
 
-    private void SeedSampleData()
-    {
-        // Barebones starter data so the screen isn't empty on first run.
-        // Wire these up to real storage later.
-        Goals.Add(new FinancialGoal { Name = "Emergency Fund", TargetAmount = 3000, CurrentAmount = 1200 });
-        Goals.Add(new FinancialGoal { Name = "Vacation", TargetAmount = 1500, CurrentAmount = 450 });
+    public ObservableCollection<Transaction> Transactions => store.Transactions;
+    public ObservableCollection<FinancialGoal> Goals => store.Goals;
 
-        Transactions.Add(new Transaction { Description = "Groceries", Amount = 62.18m, Type = TransactionType.Expense, Date = DateTime.Now.AddHours(-3) });
-        Transactions.Add(new Transaction { Description = "Paycheck", Amount = 950.00m, Type = TransactionType.Income, Date = DateTime.Now.AddDays(-1) });
-    }
 
     private void OnAddTransactionClicked(object sender, EventArgs e)
     {
@@ -39,17 +35,67 @@ public partial class MainPage : ContentPage
             ? TransactionType.Income
             : TransactionType.Expense;
 
-        // Newest first, so the entry you just logged shows up immediately.
-        Transactions.Insert(0, new Transaction
+        if (editingTransaction is not null)
         {
-            Description = DescriptionEntry.Text.Trim(),
-            Amount = amount,
-            Type = type,
-            Date = DateTime.Now
-        });
+            var index = Transactions.IndexOf(editingTransaction);
+            Transactions[index] = new Transaction
+            {
+                Description = DescriptionEntry.Text.Trim(),
+                Amount = amount,
+                Type = type,
+                Date = editingTransaction.Date
+            };
+            editingTransaction = null;
+            AddOrSaveButton.Text = "Add Transaction";
+        }
+        else
+        {
+            Transactions.Insert(0, new Transaction
+            {
+                Description = DescriptionEntry.Text.Trim(),
+                Amount = amount,
+                Type = type,
+                Date = DateTime.Now
+            });
+        }
 
         DescriptionEntry.Text = string.Empty;
         AmountEntry.Text = string.Empty;
         TypePicker.SelectedIndex = -1;
+    }
+
+    private void OnEditTransactionClicked(object sender, EventArgs e)
+    {
+        if (sender is SwipeItem swipeItem && swipeItem.CommandParameter is Transaction transaction)
+        {
+            editingTransaction = transaction;
+            DescriptionEntry.Text = transaction.Description;
+            AmountEntry.Text = transaction.Amount.ToString();
+            TypePicker.SelectedIndex = transaction.Type == TransactionType.Income ? 1 : 0;
+            AddOrSaveButton.Text = "Save Changes";
+        }
+    }
+
+    private void OnDeleteTransactionClicked(object sender, EventArgs e)
+    {
+        if (sender is SwipeItem swipeItem && swipeItem.CommandParameter is Transaction transaction)
+        {
+            Transactions.Remove(transaction);
+
+            // If you were mid-edit on the transaction you just deleted, reset the form.
+            if (editingTransaction == transaction)
+            {
+                editingTransaction = null;
+                AddOrSaveButton.Text = "Add Transaction";
+                DescriptionEntry.Text = string.Empty;
+                AmountEntry.Text = string.Empty;
+                TypePicker.SelectedIndex = -1;
+            }
+        }
+    }
+
+    private async void OnGoToThrowawayClicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new ThrowawayPage(store));
     }
 }

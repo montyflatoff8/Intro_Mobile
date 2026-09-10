@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using FiscApp.Services;
+using FiscApp.Pages;
 
 namespace FiscApp
 {
@@ -14,6 +16,10 @@ namespace FiscApp
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
+
+            builder.Services.AddSingleton<MainPage>();
+            builder.Services.AddSingleton<FinanceDataStore>();
+            builder.Services.AddSingleton<ThrowawayPage>();
 
 #if DEBUG
     		builder.Logging.AddDebug();
