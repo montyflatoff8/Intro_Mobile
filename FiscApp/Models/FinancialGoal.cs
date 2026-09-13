@@ -1,5 +1,10 @@
-﻿namespace FiscApp.Models;
+namespace FiscApp.Models;
 
+/// <summary>
+/// A savings goal the user is tracking toward (e.g. "Emergency Fund", target $3,000).
+/// Purely informational right now — nothing automatically adds to CurrentAmount the way
+/// transactions update BudgetCategory.AmountSpent.
+/// </summary>
 public class FinancialGoal
 {
     public string Name { get; set; } = string.Empty;

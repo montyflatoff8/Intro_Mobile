@@ -8,6 +8,13 @@
     Title="FiscApp"
     FlyoutBehavior="Flyout">
 
+    <!--
+      Each ShellContent below becomes one row in the hamburger flyout menu, and registers a
+      navigable route (e.g. Shell.Current.GoToAsync("Budget")). ContentTemplate wraps the page
+      type in a DataTemplate so Shell only constructs the page (via the DI container set up in
+      MauiProgram.cs) the first time the user actually navigates to it, rather than eagerly
+      creating every page at startup.
+    -->
 
     <ShellContent
         Title="Home"
@@ -23,6 +30,5 @@
         Title="Reports"
         ContentTemplate="{DataTemplate pages:Reports}"
         Route="Reports" />
-
 
 </Shell>
