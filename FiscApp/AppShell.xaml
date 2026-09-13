@@ -4,17 +4,20 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:FiscApp"
+    xmlns:pages="clr-namespace:FiscApp.Pages"
     Title="FiscApp"
     FlyoutBehavior="Flyout">
-    
+
 
     <ShellContent
         Title="Home"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
-    
+
     <ShellContent
         Title="Budget"
-        
+        ContentTemplate="{DataTemplate pages:Budget}"
+        Route="Budget" />
+
 
 </Shell>

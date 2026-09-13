@@ -20,6 +20,7 @@ namespace FiscApp
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddSingleton<FinanceDataStore>();
             builder.Services.AddSingleton<ThrowawayPage>();
+            builder.Services.AddSingleton<Budget>();
 
 #if DEBUG
     		builder.Logging.AddDebug();

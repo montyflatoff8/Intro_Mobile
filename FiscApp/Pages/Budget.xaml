@@ -5,9 +5,23 @@
              Title="Budget">
     <VerticalStackLayout>
         <Label 
-            Text=""Budget
+            Text="Budget"
             VerticalOptions="Center" 
             HorizontalOptions="Center" />
-        
+
+        <Entry
+            x:Name="CategoryNameEntry"
+            Placeholder="Category Name" />
+
+        <Entry
+            x:Name="CategoryLimitEntry"
+            Placeholder="Monthly Limit"
+            Keyboard="Numeric"/>
+
+        <Button
+            x:Name="AddCategoryButton"
+            Text="Add Category"
+            Clicked="OnAddCategoryClicked"/>
+
     </VerticalStackLayout>
 </ContentPage>

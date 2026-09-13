@@ -15,7 +15,14 @@ namespace FiscApp.Models
 
         private decimal amountSpent;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public BudgetCategory(string name, decimal monthlyLimit, decimal amountSpent)
+        {
+            this.name = name;
+            this.monthlyLimit = monthlyLimit;
+            this.amountSpent = amountSpent;
+        }
 
         public System.Drawing.Color StatusColor
         {
@@ -77,7 +84,7 @@ namespace FiscApp.Models
         {
             get
             {
-                return this.Name;
+                return this.name;
             }
             set
             {
