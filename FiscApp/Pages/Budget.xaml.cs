@@ -1,17 +1,20 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using FiscApp.Models;
+using FiscApp.Services;
 namespace FiscApp.Pages;
 
 public partial class Budget : ContentPage
 {
-	private ObservableCollection<BudgetCategory> Categories = new ObservableCollection<BudgetCategory>();
-	public Budget()
+	private readonly FinanceDataStore store;
+
+    public ObservableCollection<BudgetCategory> Categories => store.Categories;
+
+    public Budget(FinanceDataStore store)
 	{
+		this.store = store;
 		InitializeComponent();
 		BindingContext = this;
-		Categories.Add(new BudgetCategory("Entertainment", 200.00m, 0.00m));
-        Categories.Add(new BudgetCategory("Food", 400.00m, 0.00m));
     }
 
 	public async void OnAddCategoryClicked(object sender, EventArgs e)
@@ -25,9 +28,17 @@ public partial class Budget : ContentPage
 		}
 
 		BudgetCategory category = new BudgetCategory(name, limit, 0.00m);
-		Categories.Add(category);
+		store.Categories.Add(category);
 
 		CategoryNameEntry.Text = string.Empty;
 		CategoryLimitEntry.Text = string.Empty;
+    }
+
+    private void OnDeleteCategoryClicked(object sender, EventArgs e)
+    {
+        if (sender is SwipeItem swipeItem && swipeItem.CommandParameter is BudgetCategory category)
+        {
+            store.Categories.Remove(category);
+        }
     }
 }

@@ -21,6 +21,7 @@ public partial class MainPage : ContentPage
 
     public ObservableCollection<Transaction> Transactions => store.Transactions;
     public ObservableCollection<FinancialGoal> Goals => store.Goals;
+    public ObservableCollection<BudgetCategory> Categories => store.Categories;
 
 
     private void OnAddTransactionClicked(object sender, EventArgs e)
@@ -35,33 +36,59 @@ public partial class MainPage : ContentPage
             ? TransactionType.Income
             : TransactionType.Expense;
 
+        var selectedCategory = CategoryPicker.SelectedItem as BudgetCategory;
+
         if (editingTransaction is not null)
         {
+            // Reverse the old transaction's effect on its old category, if it had one
+            if (editingTransaction.Type == TransactionType.Expense && editingTransaction.Category is not null)
+            {
+                editingTransaction.Category.AmountSpent -= editingTransaction.Amount;
+            }
+
             var index = Transactions.IndexOf(editingTransaction);
-            Transactions[index] = new Transaction
+            var updated = new Transaction
             {
                 Description = DescriptionEntry.Text.Trim(),
                 Amount = amount,
                 Type = type,
-                Date = editingTransaction.Date
+                Date = editingTransaction.Date,
+                Category = type == TransactionType.Expense ? selectedCategory : null
             };
+            Transactions[index] = updated;
+
+            // Apply the new effect
+            if (updated.Type == TransactionType.Expense && updated.Category is not null)
+            {
+                updated.Category.AmountSpent += updated.Amount;
+            }
+
             editingTransaction = null;
             AddOrSaveButton.Text = "Add Transaction";
         }
         else
         {
-            Transactions.Insert(0, new Transaction
+            var transaction = new Transaction
             {
                 Description = DescriptionEntry.Text.Trim(),
                 Amount = amount,
                 Type = type,
-                Date = DateTime.Now
-            });
+                Date = DateTime.Now,
+                Category = type == TransactionType.Expense ? selectedCategory : null
+            };
+
+            Transactions.Insert(0, transaction);
+
+            if (transaction.Type == TransactionType.Expense && transaction.Category is not null)
+            {
+                transaction.Category.AmountSpent += transaction.Amount;
+            }
         }
 
         DescriptionEntry.Text = string.Empty;
         AmountEntry.Text = string.Empty;
         TypePicker.SelectedIndex = -1;
+        CategoryPicker.SelectedIndex = -1;
     }
 
     private void OnEditTransactionClicked(object sender, EventArgs e)
@@ -72,6 +99,7 @@ public partial class MainPage : ContentPage
             DescriptionEntry.Text = transaction.Description;
             AmountEntry.Text = transaction.Amount.ToString();
             TypePicker.SelectedIndex = transaction.Type == TransactionType.Income ? 1 : 0;
+            CategoryPicker.SelectedItem = transaction.Category;
             AddOrSaveButton.Text = "Save Changes";
         }
     }
@@ -80,9 +108,13 @@ public partial class MainPage : ContentPage
     {
         if (sender is SwipeItem swipeItem && swipeItem.CommandParameter is Transaction transaction)
         {
+            if (transaction.Type == TransactionType.Expense && transaction.Category is not null)
+            {
+                transaction.Category.AmountSpent -= transaction.Amount;
+            }
+
             Transactions.Remove(transaction);
 
-            // If you were mid-edit on the transaction you just deleted, reset the form.
             if (editingTransaction == transaction)
             {
                 editingTransaction = null;
@@ -90,6 +122,7 @@ public partial class MainPage : ContentPage
                 DescriptionEntry.Text = string.Empty;
                 AmountEntry.Text = string.Empty;
                 TypePicker.SelectedIndex = -1;
+                CategoryPicker.SelectedIndex = -1;
             }
         }
     }

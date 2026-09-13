@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
-using System.Drawing;
 using System.Runtime.CompilerServices;
+using Microsoft.Maui.Graphics;
 
 namespace FiscApp.Models
 {
@@ -24,24 +24,20 @@ namespace FiscApp.Models
             this.amountSpent = amountSpent;
         }
 
-        public System.Drawing.Color StatusColor
+        public Color StatusColor
         {
             get
             {
                 if (PercentageUsed >= 1.0)
-                {
-                    return System.Drawing.Color.Red;
-                }
-                else if(PercentageUsed >= 0.8)
-                {
-                    return System.Drawing.Color.Orange;
-                }
+                    return Colors.Red;
+                else if (PercentageUsed >= 0.8)
+                    return Colors.Orange;
                 else
-                {
-                    return System.Drawing.Color.Green;
-                }
+                    return Colors.Green;
             }
         }
+    
+        
 
         public double PercentageUsed
         {
@@ -88,7 +84,7 @@ namespace FiscApp.Models
             }
             set
             {
-                this.Name =  value;
+                this.name =  value;
                 OnPropertyChanged();
             }
         }

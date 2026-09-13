@@ -11,6 +11,8 @@ namespace FiscApp.Services
         public ObservableCollection<FinancialGoal> Goals { get; } = new();
         public ObservableCollection<Transaction> Transactions { get; } = new();
 
+        public ObservableCollection<BudgetCategory> Categories { get; } = new();
+
         public FinanceDataStore()
         {
             SeedSampleData();
@@ -23,6 +25,9 @@ namespace FiscApp.Services
 
             Transactions.Add(new Transaction { Description = "Groceries", Amount = 62.18m, Type = TransactionType.Expense, Date = DateTime.Now.AddHours(-3) });
             Transactions.Add(new Transaction { Description = "Paycheck", Amount = 950.00m, Type = TransactionType.Income, Date = DateTime.Now.AddDays(-1) });
+
+            Categories.Add(new BudgetCategory("Entertainment", 200.00m, 0.00m));
+            Categories.Add(new BudgetCategory("Food", 400.00m, 0.00m));
         }
     }
 }
