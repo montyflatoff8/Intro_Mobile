@@ -8,12 +8,12 @@
 
     <ScrollView>
 
-            <VerticalStackLayout Padding="16" Spacing="20">
+        <VerticalStackLayout Padding="16" Spacing="20">
             <Button Text="TEST: Go to Throwaway Page"
                 Clicked="OnGoToThrowawayClicked"
                 BackgroundColor="Gray"
                 TextColor="White" />
-                <!--  Goals section — front and center  -->
+            <!--  Goals section — front and center  -->
             <Label Text="Your Goals"
                    FontSize="20"
                    FontAttributes="Bold" />
@@ -68,6 +68,8 @@
                 <VerticalStackLayout Spacing="10">
                     <Entry x:Name="DescriptionEntry" Placeholder="What was it for?" />
 
+                    <Entry x:Name="NotesEntry" Placeholder="Notes (optional)" />
+
                     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
                         <Entry x:Name="AmountEntry"
                            Grid.Column="0"
@@ -86,10 +88,10 @@
                         </Picker>
 
                         <Picker x:Name="CategoryPicker"
-                            Grid.Column="2"
-                            Title="Category"
-                            ItemsSource="{Binding Categories}"
-                            ItemDisplayBinding="{Binding Name}" />
+                                Grid.Column="2"
+                                Title="Category"
+                                ItemsSource="{Binding Categories}"
+                                ItemDisplayBinding="{Binding Name}" />
                     </Grid>
 
                     <Button x:Name="AddOrSaveButton"
@@ -122,6 +124,9 @@
                             <Grid Padding="4,10" ColumnDefinitions="*,Auto" BackgroundColor="White">
                                 <VerticalStackLayout Grid.Column="0">
                                     <Label Text="{Binding Description}" FontSize="15" />
+                                    <Label Text="{Binding Notes}"
+                                           FontSize="12"
+                                           TextColor="Gray" />
                                     <Label Text="{Binding Date, StringFormat='{0:MMM d, h:mm tt}'}"
                                FontSize="12"
                                TextColor="Gray" />
@@ -136,7 +141,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            
+
         </VerticalStackLayout>
     </ScrollView>
 

@@ -19,5 +19,10 @@
         ContentTemplate="{DataTemplate pages:Budget}"
         Route="Budget" />
 
+    <ShellContent
+        Title="Reports"
+        ContentTemplate="{DataTemplate pages:Reports}"
+        Route="Reports" />
+
 
 </Shell>

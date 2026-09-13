@@ -13,6 +13,7 @@ public class Transaction
     public TransactionType Type { get; set; }
     public DateTime Date { get; set; } = DateTime.Now;
     public BudgetCategory? Category { get; set; }
+    public string? Notes { get; set; }
 
     // Convenience properties for binding in the UI
     public string DisplayAmount =>

@@ -26,6 +26,8 @@ public partial class MainPage : ContentPage
 
     private void OnAddTransactionClicked(object sender, EventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine($"NotesEntry.Text = '{NotesEntry.Text}'");
+
         if (string.IsNullOrWhiteSpace(DescriptionEntry.Text))
             return;
 
@@ -37,10 +39,10 @@ public partial class MainPage : ContentPage
             : TransactionType.Expense;
 
         var selectedCategory = CategoryPicker.SelectedItem as BudgetCategory;
+        var notes = string.IsNullOrWhiteSpace(NotesEntry.Text) ? null : NotesEntry.Text.Trim();
 
         if (editingTransaction is not null)
         {
-            // Reverse the old transaction's effect on its old category, if it had one
             if (editingTransaction.Type == TransactionType.Expense && editingTransaction.Category is not null)
             {
                 editingTransaction.Category.AmountSpent -= editingTransaction.Amount;
@@ -53,11 +55,11 @@ public partial class MainPage : ContentPage
                 Amount = amount,
                 Type = type,
                 Date = editingTransaction.Date,
+                Notes = notes,
                 Category = type == TransactionType.Expense ? selectedCategory : null
             };
             Transactions[index] = updated;
 
-            // Apply the new effect
             if (updated.Type == TransactionType.Expense && updated.Category is not null)
             {
                 updated.Category.AmountSpent += updated.Amount;
@@ -74,6 +76,7 @@ public partial class MainPage : ContentPage
                 Amount = amount,
                 Type = type,
                 Date = DateTime.Now,
+                Notes = notes,
                 Category = type == TransactionType.Expense ? selectedCategory : null
             };
 
@@ -87,6 +90,7 @@ public partial class MainPage : ContentPage
 
         DescriptionEntry.Text = string.Empty;
         AmountEntry.Text = string.Empty;
+        NotesEntry.Text = string.Empty;
         TypePicker.SelectedIndex = -1;
         CategoryPicker.SelectedIndex = -1;
     }
@@ -100,6 +104,7 @@ public partial class MainPage : ContentPage
             AmountEntry.Text = transaction.Amount.ToString();
             TypePicker.SelectedIndex = transaction.Type == TransactionType.Income ? 1 : 0;
             CategoryPicker.SelectedItem = transaction.Category;
+            NotesEntry.Text = transaction.Notes;
             AddOrSaveButton.Text = "Save Changes";
         }
     }
