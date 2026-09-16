@@ -124,6 +124,9 @@
                             <Grid Padding="4,10" ColumnDefinitions="*,Auto" BackgroundColor="White">
                                 <VerticalStackLayout Grid.Column="0">
                                     <Label Text="{Binding Description}" FontSize="15" />
+                                    <Label Text="{Binding CategoryDisplay}"
+                                           FontSize="12"
+                                           TextColor="#3D7BFF" />
                                     <Label Text="{Binding Notes}"
                                            FontSize="12"
                                            TextColor="Gray" />

@@ -37,4 +37,10 @@ public class Transaction
         Type == TransactionType.Expense
             ? Color.FromArgb("#D64545")
             : Color.FromArgb("#2E9E5B");
+
+    // Category label shown under the description on each transaction row.
+    public string CategoryDisplay =>
+        Type == TransactionType.Income
+            ? "Income"
+            : Category?.Name ?? "Uncategorized";
 }

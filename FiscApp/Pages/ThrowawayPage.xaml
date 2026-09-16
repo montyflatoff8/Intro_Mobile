@@ -5,15 +5,25 @@
              Title="ThrowawayPage">
     <VerticalStackLayout>
         <Label 
-            x:Name="TransactionCountLabel"
-            Text=""
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+                Text="Transactions:"
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
 
         <Label 
-            x:Name="GoalCountLabel"
-            Text=""
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+                x:Name="TransactionCountLabel"
+                Text=""
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
+
+        <Label 
+                Text="Goals:"
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
+
+        <Label 
+                x:Name="GoalCountLabel"
+                Text=""
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
     </VerticalStackLayout>
 </ContentPage>
