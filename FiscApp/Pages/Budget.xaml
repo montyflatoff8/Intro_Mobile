@@ -1,65 +1,109 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Budget Setup page. Bound to BudgetViewModel — creating a category, deleting one, and moving
+  between months are all Commands; nothing here reads a control's value directly in code-behind
+  anymore. x:Name="RootPage" lets the per-row SwipeItem below (its DataContext is a
+  BudgetProgress, not the page) reach DeleteCategoryCommand on the page's BindingContext.
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:models="clr-namespace:FiscApp.Models"
+             xmlns:viewmodels="clr-namespace:FiscApp.ViewModels"
              x:Class="FiscApp.Pages.Budget"
+             x:Name="RootPage"
+             x:DataType="viewmodels:BudgetViewModel"
+             BackgroundColor="{DynamicResource PageBackgroundColor}"
              Title="Budget">
-    
-    <VerticalStackLayout>
-        <Label 
-            Text="Budget"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
 
-        <Entry
-            x:Name="CategoryNameEntry"
-            Placeholder="Category Name" />
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Label Text="Budget"
+                   Style="{StaticResource SectionHeaderStyle}"
+                   HorizontalOptions="Center" />
 
-        <Entry
-            x:Name="CategoryLimitEntry"
-            Placeholder="Monthly Limit"
-            Keyboard="Numeric"/>
+            <!--  Fix #2: month navigation. CategoryProgress (bound below) is recalculated by
+                  BudgetViewModel from the live Transactions collection for whichever month is
+                  selected here — there's no stored running total to get out of sync anymore.  -->
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Grid.Column="0"
+                        Text="&lt;"
+                        Command="{Binding PreviousMonthCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        WidthRequest="48" />
+                <Label Grid.Column="1"
+                       Text="{Binding MonthLabel}"
+                       FontAttributes="Bold"
+                       FontSize="18"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       TextColor="{DynamicResource PrimaryTextColor}" />
+                <Button Grid.Column="2"
+                        Text="&gt;"
+                        Command="{Binding NextMonthCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        WidthRequest="48" />
+            </Grid>
 
-        <Button
-            x:Name="AddCategoryButton"
-            Text="Add Category"
-            Clicked="OnAddCategoryClicked"/>
+            <!--  Fix #3: AddCategoryCommand (BudgetViewModel) rejects a blank name, a limit that
+                  isn't a positive number, and a duplicate name — with an alert explaining which.  -->
+            <Border Style="{StaticResource CardStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Entry Text="{Binding NewCategoryName}"
+                           Placeholder="Category Name"
+                           TextColor="{DynamicResource PrimaryTextColor}"
+                           PlaceholderColor="{DynamicResource SecondaryTextColor}" />
 
-        <CollectionView ItemsSource="{Binding Categories}">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:BudgetCategory">
-                    <SwipeView>
-                        <SwipeView.RightItems>
-                            <SwipeItems>
-                                <SwipeItem Text="Delete"
-                                   BackgroundColor="#D64545"
-                                   CommandParameter="{Binding .}"
-                                   Invoked="OnDeleteCategoryClicked" />
-                            </SwipeItems>
-                        </SwipeView.RightItems>
+                    <Entry Text="{Binding NewCategoryLimitText}"
+                           Placeholder="Monthly Limit"
+                           Keyboard="Numeric"
+                           TextColor="{DynamicResource PrimaryTextColor}"
+                           PlaceholderColor="{DynamicResource SecondaryTextColor}" />
 
-                        <Border Padding="14"
-                        Margin="0,4"
-                        BackgroundColor="White"
-                        Stroke="Transparent"
-                        StrokeShape="RoundRectangle 12">
-                            <VerticalStackLayout Spacing="6">
-                                <Label Text="{Binding Name}"
-                               FontAttributes="Bold"
-                               FontSize="16" />
-                                <Label Text="{Binding AmountSpent, StringFormat='Spent: {0:C}'}"
-                               FontSize="13" />
-                                <Label Text="{Binding MonthlyLimit, StringFormat='Limit: {0:C}'}"
-                               FontSize="13"
-                               TextColor="Gray" />
-                                <ProgressBar Progress="{Binding PercentageUsed}"
-                                     ProgressColor="{Binding StatusColor}" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </SwipeView>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                    <Button Text="Add Category"
+                            Command="{Binding AddCategoryCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}" />
+                </VerticalStackLayout>
+            </Border>
 
-    </VerticalStackLayout>
+            <!--  Bound to BudgetProgress (a computed, per-month snapshot of a category), not
+                  BudgetCategory directly — see Models/BudgetProgress.cs. Swiping a row Delete calls
+                  DeleteCategoryCommand, which blocks the delete (Fix #3) if any transaction still
+                  points at that category, instead of silently orphaning it.  -->
+            <CollectionView ItemsSource="{Binding CategoryProgress}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:BudgetProgress">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Delete"
+                                       BackgroundColor="{StaticResource DangerColor}"
+                                       Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.DeleteCategoryCommand}"
+                                       CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Border Margin="0,4"
+                                    Style="{StaticResource CardStyle}">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{Binding Name}"
+                                   FontAttributes="Bold"
+                                   FontSize="16"
+                                   TextColor="{DynamicResource PrimaryTextColor}" />
+                                    <Label Text="{Binding AmountSpent, StringFormat='Spent: {0:C}'}"
+                                   FontSize="13"
+                                   TextColor="{DynamicResource PrimaryTextColor}" />
+                                    <Label Text="{Binding MonthlyLimit, StringFormat='Limit: {0:C}'}"
+                                   FontSize="13"
+                                   TextColor="{DynamicResource SecondaryTextColor}" />
+                                    <ProgressBar Progress="{Binding PercentageUsed}"
+                                         ProgressColor="{Binding StatusColor}" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

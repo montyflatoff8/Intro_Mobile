@@ -41,4 +41,29 @@
     <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
     <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
     <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+
+    <!--
+      App-specific semantic colors (STATIC resources). These give every page the same vocabulary
+      for "danger", "success", and "accent" actions instead of each XAML file hardcoding its own
+      hex codes — one place to change if the palette ever changes. Referenced with {StaticResource ...}
+      because these meanings (red = danger, green = success) don't depend on time of day.
+    -->
+    <Color x:Key="AccentColor">#3D7BFF</Color>
+    <Color x:Key="DangerColor">#D64545</Color>
+    <Color x:Key="SuccessColor">#2E9E5B</Color>
+    <Color x:Key="WarningColor">#E08E00</Color>
+
+    <!--
+      Day/night theme colors (DYNAMIC resources — see App.xaml.cs). Unlike the semantic colors
+      above, these values are meant to change while the app is running: App.xaml.cs checks the
+      system clock at startup (and on a timer) and overwrites these three entries in
+      Application.Current.Resources depending on whether it's currently "night" (8pm-6am) or "day".
+      Pages reference them with {DynamicResource ...} rather than {StaticResource ...} specifically
+      so that overwrite is picked up live, without needing the page to reload.
+      The values below are just the initial defaults (light/day) used before App.xaml.cs runs its check.
+    -->
+    <Color x:Key="PageBackgroundColor">#F5F6FA</Color>
+    <Color x:Key="CardBackgroundColor">White</Color>
+    <Color x:Key="PrimaryTextColor">#1F1F1F</Color>
+    <Color x:Key="SecondaryTextColor">#6E6E6E</Color>
 </ResourceDictionary>

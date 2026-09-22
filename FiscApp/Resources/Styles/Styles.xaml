@@ -405,17 +405,28 @@
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
     </Style>
 
+    <!--
+      The flyout/hamburger menu (and its Home/Budget/Reports rows) is Shell chrome, not page
+      content, so it doesn't pick up a page's own BackgroundColor. It used to be styled with
+      {AppThemeBinding Light=..., Dark=...}, which only reacts to the DEVICE's system light/dark
+      setting — a completely separate thing from this app's own time-of-day night theme (see
+      App.xaml.cs). That's why the flyout could still show up light/white at night even while
+      the rest of the app had switched over. Binding these to the same DynamicResource keys
+      App.xaml.cs updates means the flyout now follows the app's own day/night state instead.
+    -->
     <Style TargetType="Shell" ApplyToDerivedTypes="True">
-        <Setter Property="Shell.BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
-        <Setter Property="Shell.ForegroundColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource SecondaryDarkText}}" />
-        <Setter Property="Shell.TitleColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource SecondaryDarkText}}" />
+        <Setter Property="Shell.BackgroundColor" Value="{DynamicResource PageBackgroundColor}" />
+        <Setter Property="Shell.ForegroundColor" Value="{DynamicResource PrimaryTextColor}" />
+        <Setter Property="Shell.TitleColor" Value="{DynamicResource PrimaryTextColor}" />
+        <!--  The flyout panel's own background — this is the piece that was staying white.  -->
+        <Setter Property="Shell.FlyoutBackgroundColor" Value="{DynamicResource PageBackgroundColor}" />
         <Setter Property="Shell.DisabledColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}" />
-        <Setter Property="Shell.UnselectedColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray200}}" />
+        <Setter Property="Shell.UnselectedColor" Value="{DynamicResource SecondaryTextColor}" />
         <Setter Property="Shell.NavBarHasShadow" Value="False" />
-        <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Black}}" />
-        <Setter Property="Shell.TabBarForegroundColor" Value="{AppThemeBinding Light={StaticResource Magenta}, Dark={StaticResource White}}" />
-        <Setter Property="Shell.TabBarTitleColor" Value="{AppThemeBinding Light={StaticResource Magenta}, Dark={StaticResource White}}" />
-        <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray200}}" />
+        <Setter Property="Shell.TabBarBackgroundColor" Value="{DynamicResource PageBackgroundColor}" />
+        <Setter Property="Shell.TabBarForegroundColor" Value="{StaticResource AccentColor}" />
+        <Setter Property="Shell.TabBarTitleColor" Value="{StaticResource AccentColor}" />
+        <Setter Property="Shell.TabBarUnselectedColor" Value="{DynamicResource SecondaryTextColor}" />
     </Style>
 
     <Style TargetType="NavigationPage">
@@ -429,6 +440,39 @@
         <Setter Property="BarTextColor" Value="{AppThemeBinding Light={StaticResource Magenta}, Dark={StaticResource White}}" />
         <Setter Property="UnselectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray950}}" />
         <Setter Property="SelectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray950}, Dark={StaticResource Gray200}}" />
+    </Style>
+
+    <!--
+      App-specific styles built from the semantic StaticResource colors in Colors.xaml. Buttons and
+      cards across MainPage/Budget/Reports reference these keyed styles instead of repeating
+      BackgroundColor/CornerRadius/Padding values inline, so the app reads as one consistent theme.
+    -->
+    <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource AccentColor}" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <Style x:Key="DangerButtonStyle" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource DangerColor}" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="CornerRadius" Value="10" />
+    </Style>
+
+    <Style x:Key="CardStyle" TargetType="Border">
+        <Setter Property="Padding" Value="14" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource CardBackgroundColor}" />
+        <Setter Property="Stroke" Value="Transparent" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Shadow">
+            <Shadow Brush="Black" Opacity="0.15" Radius="12" Offset="0,4" />
+        </Setter>
+    </Style>
+
+    <Style x:Key="SectionHeaderStyle" TargetType="Label">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
     </Style>
 
 </ResourceDictionary>

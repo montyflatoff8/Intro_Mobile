@@ -1,38 +1,45 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Reports and Insights page. Bound to ReportsViewModel, which rebuilds all three chart series
+  whenever the shared FinanceDataStore's transactions or categories change (data binding driving
+  live updates, per the assignment) — this page itself has no chart-building logic left in it.
+-->
 <ContentPage
     x:Class="FiscApp.Pages.Reports"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:FiscApp.ViewModels"
     xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
+    x:DataType="viewmodels:ReportsViewModel"
+    BackgroundColor="{DynamicResource PageBackgroundColor}"
     Title="Reports">
 
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="24">
 
             <Label Text="Spending Trend"
-                   FontSize="20"
-                   FontAttributes="Bold" />
+                   Style="{StaticResource SectionHeaderStyle}" />
             <lvc:CartesianChart Series="{Binding TrendSeries}"
                                  XAxes="{Binding TrendXAxes}"
                                  HeightRequest="250" />
 
             <Label Text="Category Breakdown"
-                   FontSize="20"
-                   FontAttributes="Bold" />
+                   Style="{StaticResource SectionHeaderStyle}" />
             <lvc:PieChart Series="{Binding CategoryBreakdownSeries}"
                           LegendPosition="Right"
                            HeightRequest="250" />
 
             <BoxView HeightRequest="1" Color="#E0E0E0" />
 
-            <BoxView HeightRequest="1" Color="#E0E0E0" />
-
+            <!--  Fix #2: "actual spending" here comes from ReportsViewModel calling
+                  FinanceDataStore.GetSpentAmount(category, currentMonth) — the same derived,
+                  on-demand calculation BudgetViewModel uses — instead of a stored AmountSpent
+                  that could disagree with what Budget/MainPage show for the month.  -->
             <Label Text="Budget vs. Actual Spending"
-                   FontSize="20"
-                   FontAttributes="Bold" />
+                   Style="{StaticResource SectionHeaderStyle}" />
             <lvc:CartesianChart Series="{Binding BudgetVsActualSeries}"
                                  XAxes="{Binding BudgetXAxes}"
-                                 HeightRequest="250" />
+                                 HeightRequest="280" />
 
         </VerticalStackLayout>
     </ScrollView>
