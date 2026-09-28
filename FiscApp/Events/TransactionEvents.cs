@@ -2,27 +2,45 @@ using FiscApp.Models;
 
 namespace FiscApp.Events;
 
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+//  CUSTOM EVENTS (assignment requirement: "TransactionDeletedEvent" and
+//  "TransactionEditRequestedEvent").
+//
+//  How the pieces fit together:
+//
+//    Gesture (View)            →  Command (MainViewModel)          →  Event (FinanceDataStore)
+//    swipe left → "Delete"        DeleteTransactionCommand             TransactionDeleted
+//    long press → "Delete"        LongPressTransactionCommand          TransactionDeleted
+//    long press → "Edit"          LongPressTransactionCommand          TransactionEditRequested
+//
+//    Event (FinanceDataStore)  →  Handler (MainViewModel)
+//    TransactionDeleted           OnTransactionDeleted: removes the transaction from the model
+//    TransactionEditRequested     OnTransactionEditRequested: opens the edit form
+//
+//  The gesture never modifies data itself — it only *raises* the event. The ViewModel is the
+//  subscriber that reacts to it, which is exactly the flow the assignment describes
+//  ("This event informs the ViewModel to remove the transaction from the model").
+//  Because the events live on the shared FinanceDataStore singleton, any other part of the app
+//  (e.g. a future "undo" snackbar or an analytics logger) can subscribe to them too.
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+
 /// <summary>
-/// Raised by FinanceDataStore.DeleteTransaction whenever a transaction is removed — whether
-/// that removal came from the swipe-to-delete gesture on MainPage or the "Delete" choice in
-/// the long-press action sheet. Anything that cares "a transaction just disappeared" (a
-/// confirmation toast, an analytics log, a future undo feature) can subscribe to
-/// FinanceDataStore.TransactionDeleted instead of that logic living inside the button handler
-/// that happened to trigger the delete.
+/// TransactionDeletedEvent — raised when the user swipes left on a transaction and taps
+/// "Delete" (or picks "Delete" from the long-press menu). Carries the transaction to remove.
+/// MainViewModel subscribes to FinanceDataStore.TransactionDeleted and removes it from the model.
 /// </summary>
-public class TransactionDeletedEventArgs : EventArgs
+public class TransactionDeletedEvent : EventArgs
 {
     public required Transaction Transaction { get; init; }
 }
 
 /// <summary>
-/// Raised by FinanceDataStore.RequestEditTransaction whenever the user asks to edit a
-/// transaction via the long-press action sheet on MainPage. MainViewModel subscribes to
-/// FinanceDataStore.TransactionEditRequested and reacts by populating the add/edit form —
-/// the long-press gesture itself doesn't touch the form directly, it just raises this event
-/// and lets whoever is listening decide what "edit" means.
+/// TransactionEditRequestedEvent — raised when the user long-presses a transaction and picks
+/// "Edit" from the pop-up menu. MainViewModel subscribes to
+/// FinanceDataStore.TransactionEditRequested and reacts by loading the transaction into the
+/// add/edit form (the "quick edit" option).
 /// </summary>
-public class TransactionEditRequestedEventArgs : EventArgs
+public class TransactionEditRequestedEvent : EventArgs
 {
     public required Transaction Transaction { get; init; }
 }

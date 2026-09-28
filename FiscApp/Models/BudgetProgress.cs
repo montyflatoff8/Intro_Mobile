@@ -1,3 +1,4 @@
+using FiscApp.Services;
 using Microsoft.Maui.Graphics;
 
 namespace FiscApp.Models;
@@ -22,14 +23,17 @@ public class BudgetProgress
     public string Name => Category.Name;
     public decimal MonthlyLimit => Category.MonthlyLimit;
 
+    // Fraction of the limit used (1.0 = 100%). Can exceed 1.0 when over budget.
     public double PercentageUsed =>
         MonthlyLimit <= 0 ? 0 : (double)(AmountSpent / MonthlyLimit);
 
     /// <summary>
     /// Green under 80% used, orange from 80-99% ("approaching limit"), red at 100%+ (over budget).
+    /// Colors come from the app's STATIC resources (SuccessColor / WarningColor / DangerColor in
+    /// Resources/Styles/Colors.xaml) so the bars use the same palette as the rest of the app.
     /// </summary>
     public Color StatusColor =>
-        PercentageUsed >= 1.0 ? Colors.Red
-        : PercentageUsed >= 0.8 ? Colors.Orange
-        : Colors.Green;
+        PercentageUsed >= 1.0 ? ThemeService.GetColor("DangerColor", Colors.Red)
+        : PercentageUsed >= 0.8 ? ThemeService.GetColor("WarningColor", Colors.Orange)
+        : ThemeService.GetColor("SuccessColor", Colors.Green);
 }

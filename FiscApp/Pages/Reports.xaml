@@ -17,19 +17,36 @@
     <ScrollView>
         <VerticalStackLayout Padding="16" Spacing="24">
 
+            <!--  Month-at-a-glance insights (text, computed in ReportsViewModel.RefreshInsights).  -->
+            <Border Style="{StaticResource CardStyle}">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="{Binding MonthLabel}"
+                           Style="{StaticResource SectionHeaderStyle}" />
+                    <Label Text="{Binding IncomeText}" TextColor="{StaticResource SuccessColor}" />
+                    <Label Text="{Binding ExpensesText}" TextColor="{StaticResource DangerColor}" />
+                    <Label Text="{Binding NetText}" FontAttributes="Bold" />
+                    <Label Text="{Binding TopCategoryText}" Style="{StaticResource CaptionStyle}" />
+                    <Label Text="{Binding OverBudgetText}" Style="{StaticResource CaptionStyle}" />
+                </VerticalStackLayout>
+            </Border>
+
             <Label Text="Spending Trend"
                    Style="{StaticResource SectionHeaderStyle}" />
+            <!--  Axis and legend colors are bound (not left at LiveCharts' defaults) so they follow
+                  the day/night theme — see ReportsViewModel.RefreshCharts.  -->
             <lvc:CartesianChart Series="{Binding TrendSeries}"
                                  XAxes="{Binding TrendXAxes}"
+                                 YAxes="{Binding TrendYAxes}"
                                  HeightRequest="250" />
 
             <Label Text="Category Breakdown"
                    Style="{StaticResource SectionHeaderStyle}" />
             <lvc:PieChart Series="{Binding CategoryBreakdownSeries}"
                           LegendPosition="Right"
+                          LegendTextPaint="{Binding LegendTextPaint}"
                            HeightRequest="250" />
 
-            <BoxView HeightRequest="1" Color="#E0E0E0" />
+            <BoxView Style="{StaticResource DividerStyle}" />
 
             <!--  Fix #2: "actual spending" here comes from ReportsViewModel calling
                   FinanceDataStore.GetSpentAmount(category, currentMonth) — the same derived,
@@ -39,6 +56,9 @@
                    Style="{StaticResource SectionHeaderStyle}" />
             <lvc:CartesianChart Series="{Binding BudgetVsActualSeries}"
                                  XAxes="{Binding BudgetXAxes}"
+                                 YAxes="{Binding BudgetYAxes}"
+                                 LegendPosition="Top"
+                                 LegendTextPaint="{Binding LegendTextPaint}"
                                  HeightRequest="280" />
 
         </VerticalStackLayout>

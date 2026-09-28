@@ -23,9 +23,17 @@ public abstract class BaseViewModel : ObservableObject
         => AlertRequested?.Invoke(title, message, cancel) ?? Task.CompletedTask;
 
     // Same idea as AlertRequested, but for Page.DisplayActionSheet — used by the long-press
-    // gesture's "Edit / Delete" menu. The Page subscribes this to its own DisplayActionSheet call.
+    // gesture's "View Details / Edit / Delete" menu. The Page subscribes this to its own DisplayActionSheet call.
     public event Func<string, string, string?, string[], Task<string>>? ActionSheetRequested;
 
     protected Task<string> ShowActionSheetAsync(string title, string cancel, string? destruction, string[] buttons)
         => ActionSheetRequested?.Invoke(title, cancel, destruction, buttons) ?? Task.FromResult(cancel);
+
+    // Same idea again, for Page.DisplayPromptAsync (a dialog with a text box). Used by the
+    // Budget page's "Edit Limit" swipe action. Returns null if the user cancels.
+    // Arguments: title, message, initial value.
+    public event Func<string, string, string, Task<string?>>? PromptRequested;
+
+    protected Task<string?> ShowPromptAsync(string title, string message, string initialValue)
+        => PromptRequested?.Invoke(title, message, initialValue) ?? Task.FromResult<string?>(null);
 }

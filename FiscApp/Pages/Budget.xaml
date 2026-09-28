@@ -69,12 +69,20 @@
                   BudgetCategory directly — see Models/BudgetProgress.cs. Swiping a row Delete calls
                   DeleteCategoryCommand, which blocks the delete (Fix #3) if any transaction still
                   points at that category, instead of silently orphaning it.  -->
+            <Label Text="Tip: swipe a category left to edit its limit or delete it."
+                   Style="{StaticResource CaptionStyle}" />
+
             <CollectionView ItemsSource="{Binding CategoryProgress}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:BudgetProgress">
                         <SwipeView>
                             <SwipeView.RightItems>
                                 <SwipeItems>
+                                    <!--  Swipe left → change this category's monthly limit.  -->
+                                    <SwipeItem Text="Edit Limit"
+                                       BackgroundColor="{StaticResource AccentColor}"
+                                       Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.EditLimitCommand}"
+                                       CommandParameter="{Binding .}" />
                                     <SwipeItem Text="Delete"
                                        BackgroundColor="{StaticResource DangerColor}"
                                        Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.DeleteCategoryCommand}"

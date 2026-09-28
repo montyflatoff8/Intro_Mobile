@@ -41,6 +41,8 @@ namespace FiscApp.Models
             set { monthlyLimit = value; OnPropertyChanged(); }
         }
 
+        // Notifies listeners (BudgetViewModel/ReportsViewModel) so they recompute when a
+        // category is renamed or its limit changes.
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

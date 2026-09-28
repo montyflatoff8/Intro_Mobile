@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FiscApp.Events;
 using FiscApp.Models;
 using FiscApp.Services;
 
@@ -37,8 +38,10 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private BudgetCategory? selectedCategory;
 
-    // Category selection is only meaningful for expenses — this flips the category picker's
-    // visibility in MainPage.xaml so the user isn't asked to pick a category for income.
+    // Runs automatically when SelectedType changes (generated partial method). Category only
+    // applies to expenses, so switching to Income clears any selected category. The category
+    // picker itself is always visible in MainPage.xaml; IsExpenseSelected is available for
+    // binding but isn't currently used there.
     partial void OnSelectedTypeChanged(TransactionType? value)
     {
         OnPropertyChanged(nameof(IsExpenseSelected));
@@ -55,9 +58,12 @@ public partial class MainViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(SaveButtonText))]
     private Transaction? editingTransaction;
 
+    // Non-null EditingTransaction = the form is in "edit" mode rather than "add" mode.
     public bool IsEditing => EditingTransaction is not null;
     public string SaveButtonText => IsEditing ? "Save Changes" : "Add Transaction";
 
+    // Pass-throughs to the shared store so the page binds to the same live collections
+    // the Budget and Reports ViewModels watch.
     public ObservableCollection<Transaction> Transactions => store.Transactions;
     public ObservableCollection<FinancialGoal> Goals => store.Goals;
     public ObservableCollection<BudgetCategory> Categories => store.Categories;
@@ -67,13 +73,35 @@ public partial class MainViewModel : BaseViewModel
     {
         this.store = store;
 
-        // The long-press gesture calls store.RequestEditTransaction(...) rather than editing the
-        // form directly (see LongPressTransactionCommand below) — this subscription is what
-        // actually reacts to that event and populates the form. Any other part of the app could
-        // subscribe to the same event without touching this ViewModel at all.
-        store.TransactionEditRequested += (_, e) => PopulateFormForEdit(e.Transaction);
+        // CUSTOM EVENT SUBSCRIPTIONS (see Events/TransactionEvents.cs).
+        // The gestures on MainPage never change data directly — they only RAISE these events on
+        // the shared store. These two subscriptions are where the ViewModel actually reacts:
+        //   TransactionDeletedEvent       → remove the transaction from the model
+        //   TransactionEditRequestedEvent → open the edit form for that transaction
+        store.TransactionDeleted += OnTransactionDeleted;
+        store.TransactionEditRequested += OnTransactionEditRequested;
     }
 
+    // Handler for TransactionDeletedEvent: this is the ViewModel "being informed" that the user
+    // swiped to delete, and removing the transaction from the model in response.
+    private void OnTransactionDeleted(object? sender, TransactionDeletedEvent e)
+    {
+        store.RemoveTransaction(e.Transaction);
+
+        // If the deleted transaction was open in the edit form, clear the form so the user
+        // can't "save changes" to something that no longer exists.
+        if (EditingTransaction == e.Transaction)
+        {
+            ResetForm();
+        }
+    }
+
+    // Handler for TransactionEditRequestedEvent: loads the transaction into the form.
+    private void OnTransactionEditRequested(object? sender, TransactionEditRequestedEvent e)
+        => PopulateFormForEdit(e.Transaction);
+
+    // Bound to the Add/Save button. Validates the form, then either replaces the transaction
+    // being edited (same list position) or inserts a new one at the top, and clears the form.
     [RelayCommand]
     private async Task SaveTransaction()
     {
@@ -147,45 +175,60 @@ public partial class MainViewModel : BaseViewModel
     [RelayCommand]
     private void EditTransaction(Transaction transaction) => PopulateFormForEdit(transaction);
 
-    // Bound to the "Delete" swipe action.
+    // GESTURE: swipe left → "Delete". Bound to the Delete SwipeItem in MainPage.xaml.
+    // Raises TransactionDeletedEvent instead of deleting directly; OnTransactionDeleted (above)
+    // is what actually removes the transaction when the event arrives.
     [RelayCommand]
-    private void DeleteTransaction(Transaction transaction)
-    {
-        store.DeleteTransaction(transaction);
-
-        if (EditingTransaction == transaction)
-        {
-            ResetForm();
-        }
-    }
+    private void DeleteTransaction(Transaction transaction) => store.RaiseTransactionDeleted(transaction);
 
     /// <summary>
-    /// Bound to a long-press gesture on a transaction row (see MainPage.xaml's TouchBehavior).
-    /// Presents an action sheet with "Edit" and "Delete" — this is the "quick edit options" /
-    /// "detailed view" affordance the long-press gesture is meant to provide. Choosing either
-    /// option goes through the FinanceDataStore's custom events rather than calling
-    /// PopulateFormForEdit or DeleteTransaction directly, so the gesture is decoupled from
-    /// exactly what "edit" or "delete" does.
+    /// GESTURE: long press on a transaction row (MainPage.xaml's toolkit:TouchBehavior).
+    /// Pops up a menu with three options, so extra actions are available without cluttering
+    /// each row with buttons:
+    ///   • "View Details" – shows every field of the transaction (the "detailed view").
+    ///   • "Edit"         – raises TransactionEditRequestedEvent (the "quick edit option").
+    ///   • "Delete"       – raises TransactionDeletedEvent (same path as swipe-to-delete).
+    /// Edit and Delete go through the store's custom events rather than calling
+    /// PopulateFormForEdit / RemoveTransaction directly, so the gesture is decoupled from what
+    /// "edit" or "delete" actually does.
     /// </summary>
     [RelayCommand]
     private async Task LongPressTransaction(Transaction transaction)
     {
-        var choice = await ShowActionSheetAsync(
-            $"{transaction.Description} — {transaction.DisplayAmount}",
-            "Cancel",
-            "Delete",
-            new[] { "Edit" });
+        const string viewDetails = "View Details";
+        const string edit = "Edit";
+        const string delete = "Delete";
 
-        if (choice == "Edit")
+        var choice = await ShowActionSheetAsync(
+            $"{transaction.Description} ({transaction.DisplayAmount})",
+            "Cancel",
+            delete,
+            new[] { viewDetails, edit });
+
+        switch (choice)
         {
-            store.RequestEditTransaction(transaction);
-        }
-        else if (choice == "Delete")
-        {
-            store.DeleteTransaction(transaction);
+            case viewDetails:
+                await ShowAlertAsync("Transaction Details", BuildDetailsText(transaction), "Close");
+                break;
+            case edit:
+                store.RaiseTransactionEditRequested(transaction);
+                break;
+            case delete:
+                store.RaiseTransactionDeleted(transaction);
+                break;
         }
     }
 
+    // Builds the multi-line body of the "View Details" pop-up.
+    private static string BuildDetailsText(Transaction t) =>
+        $"Description: {t.Description}\n" +
+        $"Amount: {t.DisplayAmount}\n" +
+        $"Type: {t.Type}\n" +
+        $"Category: {t.CategoryDisplay}\n" +
+        $"Date: {t.Date:dddd, MMMM d, yyyy}\n" +
+        $"Notes: {(string.IsNullOrWhiteSpace(t.Notes) ? "(none)" : t.Notes)}";
+
+    // Copies a transaction's values into the form and switches it into edit mode.
     private void PopulateFormForEdit(Transaction transaction)
     {
         EditingTransaction = transaction;
@@ -197,6 +240,7 @@ public partial class MainViewModel : BaseViewModel
         SelectedCategory = transaction.Category;
     }
 
+    // Clears every field and leaves edit mode (button text goes back to "Add Transaction").
     private void ResetForm()
     {
         EditingTransaction = null;

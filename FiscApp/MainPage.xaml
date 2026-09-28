@@ -21,11 +21,7 @@
     <ScrollView>
 
         <VerticalStackLayout Padding="16" Spacing="20">
-            <Button Text="TEST: Go to Throwaway Page"
-                Clicked="OnGoToThrowawayClicked"
-                BackgroundColor="Gray"
-                TextColor="White" />
-            <!--  Goals section — front and center  -->
+            <!--  Goals section — front and center. Horizontal, read-only list of goal cards.  -->
             <Label Text="Your Goals"
                    Style="{StaticResource SectionHeaderStyle}" />
 
@@ -58,11 +54,17 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <BoxView HeightRequest="1" Color="#E0E0E0" />
+            <!--  Separator line: DividerStyle (Styles.xaml) uses the dynamic DividerColor, so it
+                  dims at night instead of staying a hardcoded bright grey.  -->
+            <BoxView Style="{StaticResource DividerStyle}" />
 
             <!--  Transactions section — right underneath goals  -->
             <Label Text="Transactions"
                    Style="{StaticResource SectionHeaderStyle}" />
+
+            <!--  Small hint so users discover the two gestures (they're otherwise invisible).  -->
+            <Label Text="Tip: swipe a transaction left to edit or delete it, or long-press it for details."
+                   Style="{StaticResource CaptionStyle}" />
 
             <!--  Quick-add: open the app, log it, done  -->
             <Border Style="{StaticResource CardStyle}">
@@ -143,13 +145,14 @@
             <!--  Recent transactions, most recent first. Each row is now driven entirely by
                   MainViewModel's Commands instead of Clicked/Invoked handlers in code-behind —
                   that's the "Gesture Recognition" + "Custom Events" requirements in one place:
-                    - Swipe left → Edit/Delete SwipeItems (native MAUI SwipeView, unchanged
-                      gesture, now Command-bound instead of using Invoked=... event handlers).
-                    - Long-press → toolkit:TouchBehavior below, which raises
-                      LongPressTransactionCommand and shows an action sheet with the same two
-                      options. Both "Edit" and "Delete" from that action sheet go through
-                      FinanceDataStore's custom TransactionEditRequestedEvent/TransactionDeletedEvent
-                      instead of touching the form directly (see MainViewModel.LongPressTransaction).
+                    - Swipe left → reveals Edit/Delete SwipeItems (SwipeView.RightItems are the
+                      items revealed when the row is dragged to the LEFT). Delete calls
+                      DeleteTransactionCommand, which raises TransactionDeletedEvent; the
+                      ViewModel handles that event and removes the transaction from the model.
+                    - Long-press → toolkit:TouchBehavior below runs LongPressTransactionCommand,
+                      which pops up "View Details" / "Edit" / "Delete". Edit raises
+                      TransactionEditRequestedEvent, Delete raises TransactionDeletedEvent
+                      (see Events/TransactionEvents.cs and MainViewModel).
                   Since each row's DataContext here is a Transaction (not the page), the commands
                   have to be reached via the RootPage reference declared on the ContentPage above.  -->
             <CollectionView x:Name="TransactionsView" ItemsSource="{Binding Transactions}">

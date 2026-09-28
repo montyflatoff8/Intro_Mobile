@@ -39,6 +39,7 @@ public partial class BudgetViewModel : BaseViewModel
 
         RefreshProgress();
 
+        // Recompute whenever a transaction or category is added, removed or replaced.
         store.Transactions.CollectionChanged += (_, _) => RefreshProgress();
         store.Categories.CollectionChanged += (_, _) =>
         {
@@ -62,6 +63,7 @@ public partial class BudgetViewModel : BaseViewModel
 
     private void OnCategoryPropertyChanged(object? sender, PropertyChangedEventArgs e) => RefreshProgress();
 
+    // Rebuilds one BudgetProgress row per category for SelectedMonth.
     private void RefreshProgress()
     {
         CategoryProgress.Clear();
@@ -72,6 +74,8 @@ public partial class BudgetViewModel : BaseViewModel
         }
     }
 
+    // Generated hook: runs after SelectedMonth changes (the < / > buttons), so the list
+    // immediately shows the new month's totals.
     partial void OnSelectedMonthChanged(DateTime value) => RefreshProgress();
 
     [RelayCommand]
@@ -80,6 +84,8 @@ public partial class BudgetViewModel : BaseViewModel
     [RelayCommand]
     private void NextMonth() => SelectedMonth = SelectedMonth.AddMonths(1);
 
+    // Validates the name/limit fields, adds the category to the shared store, then clears
+    // the inputs. The CollectionChanged subscription above refreshes the list.
     [RelayCommand]
     private async Task AddCategory()
     {
@@ -106,6 +112,36 @@ public partial class BudgetViewModel : BaseViewModel
 
         NewCategoryName = string.Empty;
         NewCategoryLimitText = string.Empty;
+    }
+
+    /// <summary>
+    /// Bound to the "Edit Limit" swipe action on each budget row. Lets the user change an
+    /// existing category's monthly limit (the Budget Setup page requirement: "users can specify
+    /// limits"). Changing BudgetCategory.MonthlyLimit raises PropertyChanged, which this
+    /// ViewModel and ReportsViewModel already listen to, so the progress bar and the
+    /// "Budget vs. Actual" chart both update automatically.
+    /// </summary>
+    [RelayCommand]
+    private async Task EditLimit(BudgetProgress progress)
+    {
+        var input = await ShowPromptAsync(
+            $"Edit {progress.Name} Limit",
+            "New monthly limit:",
+            progress.MonthlyLimit.ToString("0.##"));
+
+        // null = user pressed Cancel.
+        if (input is null)
+        {
+            return;
+        }
+
+        if (!decimal.TryParse(input, out var limit) || limit <= 0)
+        {
+            await ShowAlertAsync("Invalid Limit", "Please enter a monthly limit greater than zero.");
+            return;
+        }
+
+        progress.Category.MonthlyLimit = limit;
     }
 
     /// <summary>

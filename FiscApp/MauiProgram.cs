@@ -39,7 +39,8 @@ namespace FiscApp
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddSingleton<MainViewModel>();
             builder.Services.AddSingleton<FinanceDataStore>();
-            builder.Services.AddSingleton<ThrowawayPage>();
+            // Time-of-day (day/night) theme — used by App and by ReportsViewModel's charts.
+            builder.Services.AddSingleton<ThemeService>();
             builder.Services.AddSingleton<Budget>();
             builder.Services.AddSingleton<BudgetViewModel>();
             builder.Services.AddSingleton<Reports>();

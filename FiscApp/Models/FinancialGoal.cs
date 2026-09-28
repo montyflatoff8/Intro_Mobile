@@ -2,8 +2,8 @@ namespace FiscApp.Models;
 
 /// <summary>
 /// A savings goal the user is tracking toward (e.g. "Emergency Fund", target $3,000).
-/// Purely informational right now — nothing automatically adds to CurrentAmount the way
-/// transactions update BudgetCategory.AmountSpent.
+/// Purely informational right now — CurrentAmount is only set in sample data; no transaction
+/// or UI action adds to it yet.
 /// </summary>
 public class FinancialGoal
 {
@@ -12,6 +12,7 @@ public class FinancialGoal
     public decimal CurrentAmount { get; set; }
 
     // Convenience properties for binding in the UI
+    // 0.0–1.0 fraction for the ProgressBar; guards against divide-by-zero.
     public double Progress =>
         TargetAmount <= 0 ? 0 : (double)(CurrentAmount / TargetAmount);
 

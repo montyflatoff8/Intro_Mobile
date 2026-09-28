@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android native colors (status bar, native dialogs, etc.). Kept in sync with the app's
+  AccentColor / Tertiary values in Resources/Styles/Colors.xaml so the native chrome matches
+  the XAML theme instead of the template's default purple.
+-->
 <resources>
-    <color name="colorPrimary">#512BD4</color>
-    <color name="colorPrimaryDark">#2B0B98</color>
-    <color name="colorAccent">#2B0B98</color>
+    <color name="colorPrimary">#3D7BFF</color>
+    <color name="colorPrimaryDark">#1E4FC2</color>
+    <color name="colorAccent">#3D7BFF</color>
 </resources>
