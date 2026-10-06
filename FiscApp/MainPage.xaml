@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-  Transaction List page (MainPage). Bound entirely to MainViewModel (x:DataType below) — every
-  form field is a bindable property and every action is a Command, so this file has no code-
-  behind logic of its own beyond wiring up alert/action-sheet dialogs.
-  x:Name="RootPage" exists so the SwipeItems/TouchBehavior further down (which live inside the
-  CollectionView's per-item DataTemplate, where "." is the Transaction, not the page) can reach
-  back up to the page's BindingContext via {Binding Source={x:Reference RootPage}, Path=BindingContext...}.
+  Home page (transaction list). Bound to MainViewModel; code-behind only wires up dialogs.
+  Layout: the transactions CollectionView is the only scroller. Everything above the list lives in
+  its Header. No ScrollView: it gives a CollectionView unlimited height, which can collapse it on Android.
 -->
 <ContentPage x:Class="FiscApp.MainPage"
              x:Name="RootPage"
@@ -18,194 +15,166 @@
              BackgroundColor="{DynamicResource PageBackgroundColor}"
              Title="Finance Tracker">
 
-    <ScrollView>
+    <!--  Transactions list. Swipe left = Edit/Delete; long-press = details menu.
+          Row commands reach the ViewModel through RootPage, since each row's context is a Transaction.  -->
+    <CollectionView x:Name="TransactionsView"
+                    ItemsSource="{Binding Transactions}"
+                    Margin="16,0">
 
-        <VerticalStackLayout Padding="16" Spacing="20">
-            <!--  Goals section — front and center. Horizontal, read-only list of goal cards.  -->
-            <Label Text="Your Goals"
-                   Style="{StaticResource SectionHeaderStyle}" />
+        <!--  Header: content above the list. Scrolls with it and shares the page's BindingContext.  -->
+        <CollectionView.Header>
+            <VerticalStackLayout Padding="0,16" Spacing="20">
 
-            <CollectionView x:Name="GoalsView"
-                             ItemsSource="{Binding Goals}"
-                             HeightRequest="150">
-                <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12" />
-                </CollectionView.ItemsLayout>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:FinancialGoal">
-                        <Border WidthRequest="180"
-                                Style="{StaticResource CardStyle}">
-                            <VerticalStackLayout Spacing="8">
-                                <Label Text="{Binding Name}"
-                                   FontAttributes="Bold"
-                                   FontSize="15"
-                                   TextColor="{DynamicResource PrimaryTextColor}" />
-                                <ProgressBar Progress="{Binding Progress}"
-                                    ProgressColor="{StaticResource AccentColor}" />
-                                <Label Text="{Binding ProgressText}"
-                                   FontSize="12"
-                                   TextColor="{DynamicResource PrimaryTextColor}" />
-                                <Label Text="{Binding RemainingText}"
-                                   FontSize="12"
-                                   TextColor="{DynamicResource SecondaryTextColor}" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                <!--  Goals: horizontal list of goal cards  -->
+                <Label Text="Your Goals"
+                       Style="{StaticResource SectionHeaderStyle}" />
 
-            <!--  Separator line: DividerStyle (Styles.xaml) uses the dynamic DividerColor, so it
-                  dims at night instead of staying a hardcoded bright grey.  -->
-            <BoxView Style="{StaticResource DividerStyle}" />
-
-            <!--  Transactions section — right underneath goals  -->
-            <Label Text="Transactions"
-                   Style="{StaticResource SectionHeaderStyle}" />
-
-            <!--  Small hint so users discover the two gestures (they're otherwise invisible).  -->
-            <Label Text="Tip: swipe a transaction left to edit or delete it, or long-press it for details."
-                   Style="{StaticResource CaptionStyle}" />
-
-            <!--  Quick-add: open the app, log it, done  -->
-            <Border Style="{StaticResource CardStyle}">
-                <VerticalStackLayout Spacing="10">
-                    <Entry Text="{Binding Description}"
-                           Placeholder="What was it for?"
-                           TextColor="{DynamicResource PrimaryTextColor}"
-                           PlaceholderColor="{DynamicResource SecondaryTextColor}" />
-
-                    <Entry Text="{Binding Notes}"
-                           Placeholder="Notes (optional)"
-                           TextColor="{DynamicResource PrimaryTextColor}"
-                           PlaceholderColor="{DynamicResource SecondaryTextColor}" />
-
-                    <!--  Fix #2: a real, editable date — new transactions no longer silently get
-                          DateTime.Now with no way to change it, and editing keeps whatever date
-                          the user sets here instead of always keeping the original.
-                          DatePicker has no Placeholder property — unlike an Entry, it can never be
-                          "empty" (Date is a non-nullable DateTime that defaults to today), so there's
-                          no blank state for placeholder text to stand in for. Instead, this row is
-                          styled to match the Entry fields above it (same underline, same caption
-                          position a placeholder would occupy) so it reads as the same kind of input
-                          box with "Date" labeling it, rather than looking like a stray, unlabeled
-                          control.  -->
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" VerticalOptions="Center">
-                        <Label Grid.Column="0"
-                               Text="Date"
-                               FontSize="14"
-                               VerticalOptions="Center"
-                               TextColor="{DynamicResource SecondaryTextColor}" />
-                        <DatePicker Grid.Column="1"
-                                    Date="{Binding Date}"
-                                    TextColor="{DynamicResource PrimaryTextColor}"
-                                    HorizontalOptions="Start" />
-                    </Grid>
-
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                        <Entry Text="{Binding AmountText}"
-                           Grid.Column="0"
-                           Placeholder="Amount"
-                           Keyboard="Numeric"
-                           TextColor="{DynamicResource PrimaryTextColor}"
-                           PlaceholderColor="{DynamicResource SecondaryTextColor}" />
-
-                        <!--  Fix #3: bound to TransactionTypes/SelectedType (a nullable enum) rather
-                              than reading Picker.SelectedIndex in code-behind — an unselected type
-                              stays null instead of silently defaulting to Expense, and
-                              MainViewModel.SaveTransaction rejects a save while it's null.  -->
-                        <Picker Grid.Column="1"
-                            Title="Type"
-                            TitleColor="{DynamicResource SecondaryTextColor}"
-                            TextColor="{DynamicResource PrimaryTextColor}"
-                            ItemsSource="{Binding TransactionTypes}"
-                            SelectedItem="{Binding SelectedType}" />
-
-                        <!--  Always visible now (not just for expenses) so it never looks like the
-                              field has disappeared — MainViewModel.SaveTransaction still only
-                              *requires* a category when SelectedType is Expense; picking one for an
-                              Income transaction is simply ignored on save (see SaveTransaction's
-                              "category = SelectedType == Expense ? SelectedCategory : null" line).  -->
-                        <Picker Grid.Column="2"
-                                Title="Category"
-                                TitleColor="{DynamicResource SecondaryTextColor}"
-                                TextColor="{DynamicResource PrimaryTextColor}"
-                                ItemsSource="{Binding Categories}"
-                                ItemDisplayBinding="{Binding Name}"
-                                SelectedItem="{Binding SelectedCategory}" />
-                    </Grid>
-
-                    <!--  Text switches to "Save Changes" while editing (IsEditing, driven by
-                          EditingTransaction) — same button, same Command, for both add and edit.  -->
-                    <Button Text="{Binding SaveButtonText}"
-                        Command="{Binding SaveTransactionCommand}"
-                        Style="{StaticResource PrimaryButtonStyle}" />
-                </VerticalStackLayout>
-            </Border>
-
-            <!--  Recent transactions, most recent first. Each row is now driven entirely by
-                  MainViewModel's Commands instead of Clicked/Invoked handlers in code-behind —
-                  that's the "Gesture Recognition" + "Custom Events" requirements in one place:
-                    - Swipe left → reveals Edit/Delete SwipeItems (SwipeView.RightItems are the
-                      items revealed when the row is dragged to the LEFT). Delete calls
-                      DeleteTransactionCommand, which raises TransactionDeletedEvent; the
-                      ViewModel handles that event and removes the transaction from the model.
-                    - Long-press → toolkit:TouchBehavior below runs LongPressTransactionCommand,
-                      which pops up "View Details" / "Edit" / "Delete". Edit raises
-                      TransactionEditRequestedEvent, Delete raises TransactionDeletedEvent
-                      (see Events/TransactionEvents.cs and MainViewModel).
-                  Since each row's DataContext here is a Transaction (not the page), the commands
-                  have to be reached via the RootPage reference declared on the ContentPage above.  -->
-            <CollectionView x:Name="TransactionsView" ItemsSource="{Binding Transactions}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Transaction">
-                        <SwipeView>
-                            <SwipeView.RightItems>
-                                <SwipeItems>
-                                    <SwipeItem Text="Edit"
-                                   BackgroundColor="{StaticResource AccentColor}"
-                                   Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.EditTransactionCommand}"
-                                   CommandParameter="{Binding .}" />
-                                    <SwipeItem Text="Delete"
-                                   BackgroundColor="{StaticResource DangerColor}"
-                                   Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.DeleteTransactionCommand}"
-                                   CommandParameter="{Binding .}" />
-                                </SwipeItems>
-                            </SwipeView.RightItems>
-
-                            <Grid Padding="4,10" ColumnDefinitions="*,Auto" BackgroundColor="{DynamicResource CardBackgroundColor}">
-                                <Grid.Behaviors>
-                                    <!--  Long-press gesture (CommunityToolkit.Maui). 500ms hold on a
-                                          row opens the "quick edit options / details" action sheet.  -->
-                                    <toolkit:TouchBehavior LongPressCommand="{Binding Source={x:Reference RootPage}, Path=BindingContext.LongPressTransactionCommand}"
-                                                            LongPressCommandParameter="{Binding .}"
-                                                            LongPressDuration="500" />
-                                </Grid.Behaviors>
-                                <VerticalStackLayout Grid.Column="0">
-                                    <Label Text="{Binding Description}" FontSize="15" TextColor="{DynamicResource PrimaryTextColor}" />
-                                    <Label Text="{Binding CategoryDisplay}"
+                <CollectionView x:Name="GoalsView"
+                                ItemsSource="{Binding Goals}"
+                                HeightRequest="150">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="12" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:FinancialGoal">
+                            <Border WidthRequest="180"
+                                    Style="{StaticResource CardStyle}">
+                                <VerticalStackLayout Spacing="8">
+                                    <Label Text="{Binding Name}"
+                                           FontAttributes="Bold"
+                                           FontSize="15"
+                                           TextColor="{DynamicResource PrimaryTextColor}" />
+                                    <ProgressBar Progress="{Binding Progress}"
+                                                 ProgressColor="{StaticResource AccentColor}" />
+                                    <Label Text="{Binding ProgressText}"
                                            FontSize="12"
-                                           TextColor="{StaticResource AccentColor}" />
-                                    <Label Text="{Binding Notes}"
+                                           TextColor="{DynamicResource PrimaryTextColor}" />
+                                    <Label Text="{Binding RemainingText}"
                                            FontSize="12"
                                            TextColor="{DynamicResource SecondaryTextColor}" />
-                                    <!--  Date only — the exact time a transaction was logged isn't
-                                          useful information here, so it's left out of the display.  -->
-                                    <Label Text="{Binding Date, StringFormat='{0:MMM d, yyyy}'}"
-                               FontSize="12"
-                               TextColor="{DynamicResource SecondaryTextColor}" />
                                 </VerticalStackLayout>
-                                <Label Grid.Column="1"
-                           Text="{Binding DisplayAmount}"
-                           TextColor="{Binding AmountColor}"
-                           FontAttributes="Bold"
-                           VerticalOptions="Center" />
-                            </Grid>
-                        </SwipeView>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
 
-        </VerticalStackLayout>
-    </ScrollView>
+                <!--  Divider (dynamic color, dims at night)  -->
+                <BoxView Style="{StaticResource DividerStyle}" />
+
+                <Label Text="Transactions"
+                       Style="{StaticResource SectionHeaderStyle}" />
+
+                <!--  Hint so users find the hidden gestures  -->
+                <Label Text="Tip: swipe a transaction left to edit or delete it, or long-press it for details."
+                       Style="{StaticResource CaptionStyle}" />
+
+                <!--  Add/edit form  -->
+                <Border Style="{StaticResource CardStyle}">
+                    <VerticalStackLayout Spacing="10">
+                        <Entry Text="{Binding Description}"
+                               Placeholder="What was it for?"
+                               TextColor="{DynamicResource PrimaryTextColor}"
+                               PlaceholderColor="{DynamicResource SecondaryTextColor}" />
+
+                        <Entry Text="{Binding Notes}"
+                               Placeholder="Notes (optional)"
+                               TextColor="{DynamicResource PrimaryTextColor}"
+                               PlaceholderColor="{DynamicResource SecondaryTextColor}" />
+
+                        <!--  Editable date. DatePicker has no placeholder, so a "Date" label sits beside it.  -->
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" VerticalOptions="Center">
+                            <Label Grid.Column="0"
+                                   Text="Date"
+                                   FontSize="14"
+                                   VerticalOptions="Center"
+                                   TextColor="{DynamicResource SecondaryTextColor}" />
+                            <DatePicker Grid.Column="1"
+                                        Date="{Binding Date}"
+                                        TextColor="{DynamicResource PrimaryTextColor}"
+                                        HorizontalOptions="Start" />
+                        </Grid>
+
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                            <Entry Text="{Binding AmountText}"
+                                   Grid.Column="0"
+                                   Placeholder="Amount"
+                                   Keyboard="Numeric"
+                                   TextColor="{DynamicResource PrimaryTextColor}"
+                                   PlaceholderColor="{DynamicResource SecondaryTextColor}" />
+
+                            <!--  Type stays null until chosen, so saving without one is blocked  -->
+                            <Picker Grid.Column="1"
+                                    Title="Type"
+                                    TitleColor="{DynamicResource SecondaryTextColor}"
+                                    TextColor="{DynamicResource PrimaryTextColor}"
+                                    ItemsSource="{Binding TransactionTypes}"
+                                    SelectedItem="{Binding SelectedType}" />
+
+                            <!--  Category is required for expenses only, ignored for income  -->
+                            <Picker Grid.Column="2"
+                                    Title="Category"
+                                    TitleColor="{DynamicResource SecondaryTextColor}"
+                                    TextColor="{DynamicResource PrimaryTextColor}"
+                                    ItemsSource="{Binding Categories}"
+                                    ItemDisplayBinding="{Binding Name}"
+                                    SelectedItem="{Binding SelectedCategory}" />
+                        </Grid>
+
+                        <!--  Same button for add and edit; text changes while editing  -->
+                        <Button Text="{Binding SaveButtonText}"
+                                Command="{Binding SaveTransactionCommand}"
+                                Style="{StaticResource PrimaryButtonStyle}" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </CollectionView.Header>
+
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="models:Transaction">
+                <SwipeView>
+                    <SwipeView.RightItems>
+                        <SwipeItems>
+                            <SwipeItem Text="Edit"
+                                       BackgroundColor="{StaticResource AccentColor}"
+                                       Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.EditTransactionCommand}"
+                                       CommandParameter="{Binding .}" />
+                            <SwipeItem Text="Delete"
+                                       BackgroundColor="{StaticResource DangerColor}"
+                                       Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.DeleteTransactionCommand}"
+                                       CommandParameter="{Binding .}" />
+                        </SwipeItems>
+                    </SwipeView.RightItems>
+
+                    <Grid Padding="4,10" ColumnDefinitions="*,Auto" BackgroundColor="{DynamicResource CardBackgroundColor}">
+                        <Grid.Behaviors>
+                            <!--  Long-press (500 ms) opens the details/edit/delete menu  -->
+                            <toolkit:TouchBehavior LongPressCommand="{Binding Source={x:Reference RootPage}, Path=BindingContext.LongPressTransactionCommand}"
+                                                   LongPressCommandParameter="{Binding .}"
+                                                   LongPressDuration="500" />
+                        </Grid.Behaviors>
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="{Binding Description}"
+                                   FontSize="15"
+                                   TextColor="{DynamicResource PrimaryTextColor}" />
+                            <Label Text="{Binding CategoryDisplay}"
+                                   FontSize="12"
+                                   TextColor="{StaticResource AccentColor}" />
+                            <Label Text="{Binding Notes}"
+                                   FontSize="12"
+                                   TextColor="{DynamicResource SecondaryTextColor}" />
+                            <Label Text="{Binding Date, StringFormat='{0:MMM d, yyyy}'}"
+                                   FontSize="12"
+                                   TextColor="{DynamicResource SecondaryTextColor}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1"
+                               Text="{Binding DisplayAmount}"
+                               TextColor="{Binding AmountColor}"
+                               FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                    </Grid>
+                </SwipeView>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
 
 </ContentPage>
