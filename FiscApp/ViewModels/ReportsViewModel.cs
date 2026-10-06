@@ -2,6 +2,7 @@ using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FiscApp.Models;
 using FiscApp.Services;
+using FiscApp.Services.Interfaces;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
@@ -27,7 +28,7 @@ namespace FiscApp.ViewModels;
 /// </summary>
 public partial class ReportsViewModel : BaseViewModel
 {
-    private readonly FinanceDataStore store;
+    private readonly IFinanceDataStore store;
     private readonly DateTime currentMonth = new(DateTime.Today.Year, DateTime.Today.Month, 1);
 
     [ObservableProperty]
@@ -75,7 +76,7 @@ public partial class ReportsViewModel : BaseViewModel
     [ObservableProperty]
     private string overBudgetText = string.Empty;
 
-    public ReportsViewModel(FinanceDataStore store, ThemeService themeService)
+    public ReportsViewModel(IFinanceDataStore store, ThemeService themeService)
     {
         this.store = store;
 

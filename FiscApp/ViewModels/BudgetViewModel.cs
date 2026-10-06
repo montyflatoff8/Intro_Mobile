@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FiscApp.Models;
 using FiscApp.Services;
+using FiscApp.Services.Interfaces;
 
 namespace FiscApp.ViewModels;
 
@@ -17,7 +18,7 @@ namespace FiscApp.ViewModels;
 /// </summary>
 public partial class BudgetViewModel : BaseViewModel
 {
-    private readonly FinanceDataStore store;
+    private readonly IFinanceDataStore store;
 
     [ObservableProperty]
     private string newCategoryName = string.Empty;
@@ -33,7 +34,7 @@ public partial class BudgetViewModel : BaseViewModel
 
     public ObservableCollection<BudgetProgress> CategoryProgress { get; } = new();
 
-    public BudgetViewModel(FinanceDataStore store)
+    public BudgetViewModel(IFinanceDataStore store)
     {
         this.store = store;
 

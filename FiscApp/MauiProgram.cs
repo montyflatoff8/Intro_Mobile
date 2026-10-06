@@ -1,6 +1,7 @@
 using CommunityToolkit.Maui;
 using FiscApp.Pages;
 using FiscApp.Services;
+using FiscApp.Services.Interfaces;
 using FiscApp.ViewModels;
 using LiveChartsCore.SkiaSharpView.Maui;
 using Microsoft.Extensions.Logging;
@@ -15,13 +16,10 @@ namespace FiscApp
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
-                // Required for LiveCharts2: UseSkiaSharp() registers the rendering engine the
-                // charts draw with, and UseLiveCharts() registers the chart controls themselves
-                // (CartesianChart, PieChart) so they can be used in XAML.
+                // LiveCharts2: SkiaSharp rendering engine + chart controls for XAML.
                 .UseSkiaSharp()
                 .UseLiveCharts()
-                // Required for the CommunityToolkit.Maui gesture behaviors (TouchBehavior, used
-                // for the long-press gesture on transaction rows).
+                // CommunityToolkit: TouchBehavior (long-press on transaction rows).
                 .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
@@ -29,22 +27,22 @@ namespace FiscApp
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            // Registering pages here (rather than "new"-ing them up directly) lets MAUI's
-            // dependency injection container construct them and automatically pass in whatever
-            // constructor dependencies they ask for — in this app, that's the shared
-            // FinanceDataStore singleton every page needs, plus (now) each page's own ViewModel.
-            // AddSingleton means each of these types has exactly one shared instance for the
-            // lifetime of the app; Shell's ContentTemplate={DataTemplate ...} bindings in
-            // AppShell.xaml resolve pages through this same container.
-            builder.Services.AddSingleton<MainPage>();
-            builder.Services.AddSingleton<MainViewModel>();
-            builder.Services.AddSingleton<FinanceDataStore>();
-            // Time-of-day (day/night) theme — used by App and by ReportsViewModel's charts.
+            // SERVICES — singletons: one shared instance for the whole app.
+            // The store is registered by its interface, so ViewModels depend on IFinanceDataStore
+            // and never on the concrete class. It must be a singleton so every page sees the same data.
+            builder.Services.AddSingleton<IFinanceDataStore, FinanceDataStore>();
+            // One app-wide day/night theme and timer.
             builder.Services.AddSingleton<ThemeService>();
-            builder.Services.AddSingleton<Budget>();
-            builder.Services.AddSingleton<BudgetViewModel>();
-            builder.Services.AddSingleton<Reports>();
-            builder.Services.AddSingleton<ReportsViewModel>();
+
+            // PAGES + VIEWMODELS — transient: a new instance each time one is requested.
+            // Shell's ContentTemplate resolves pages through this container; transient guarantees
+            // it never receives a page that's already attached to another parent.
+            builder.Services.AddTransient<MainPage>();
+            builder.Services.AddTransient<MainViewModel>();
+            builder.Services.AddTransient<Budget>();
+            builder.Services.AddTransient<BudgetViewModel>();
+            builder.Services.AddTransient<Reports>();
+            builder.Services.AddTransient<ReportsViewModel>();
 
 #if DEBUG
             builder.Logging.AddDebug();

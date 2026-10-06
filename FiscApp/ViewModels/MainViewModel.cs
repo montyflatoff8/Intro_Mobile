@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using FiscApp.Events;
 using FiscApp.Models;
 using FiscApp.Services;
+using FiscApp.Services.Interfaces;
 
 namespace FiscApp.ViewModels;
 
@@ -15,7 +16,7 @@ namespace FiscApp.ViewModels;
 /// </summary>
 public partial class MainViewModel : BaseViewModel
 {
-    private readonly FinanceDataStore store;
+    private readonly IFinanceDataStore store;
 
     // [ObservableProperty] (from CommunityToolkit.Mvvm) generates a public "Description" property
     // with change notification from this private field — equivalent to writing out a full
@@ -69,7 +70,7 @@ public partial class MainViewModel : BaseViewModel
     public ObservableCollection<BudgetCategory> Categories => store.Categories;
     public TransactionType[] TransactionTypes { get; } = Enum.GetValues<TransactionType>();
 
-    public MainViewModel(FinanceDataStore store)
+    public MainViewModel(IFinanceDataStore store)
     {
         this.store = store;
 
