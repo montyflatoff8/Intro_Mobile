@@ -1,16 +1,14 @@
 using System.Collections.ObjectModel;
 using FiscApp.Events;
 using FiscApp.Models;
+using FiscApp.Services.Interfaces;
 
 namespace FiscApp.Services
 {
     /// <summary>
-    /// Central, shared source of the app's data. Registered as a singleton in MauiProgram.cs,
-    /// so every ViewModel that asks for a FinanceDataStore in its constructor receives this
-    /// exact same instance — that's what keeps MainViewModel, BudgetViewModel, and
-    /// ReportsViewModel all looking at the same Transactions/Categories/Goals.
+    /// Default in-memory implementation of IFinanceDataStore, registered as a singleton so every ViewModel shares the same data.
     /// </summary>
-    public class FinanceDataStore
+    public class FinanceDataStore : IFinanceDataStore
     {
         public ObservableCollection<FinancialGoal> Goals { get; } = new();
         public ObservableCollection<Transaction> Transactions { get; } = new();
