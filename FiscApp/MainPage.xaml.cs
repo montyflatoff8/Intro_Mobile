@@ -12,13 +12,22 @@ using FiscApp.ViewModels;
 /// </summary>
 public partial class MainPage : ContentPage
 {
+    private readonly MainViewModel viewModel;
+
     public MainPage(MainViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = viewModel;
+        BindingContext = this.viewModel = viewModel;
 
         viewModel.AlertRequested += (title, message, cancel) => DisplayAlertAsync(title, message, cancel);
         viewModel.ActionSheetRequested += (title, cancel, destruction, buttons) =>
             DisplayActionSheet(title, cancel, destruction, buttons);
+    }
+
+    // Runs on first show AND when navigating back to this page (e.g. after logging in).
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        await viewModel.OnAppearingAsync();
     }
 }

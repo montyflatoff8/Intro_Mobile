@@ -32,5 +32,12 @@ namespace FiscApp.Services.Interfaces
         void RaiseTransactionDeleted(Transaction transaction);
         void RaiseTransactionEditRequested(Transaction transaction);
         void RemoveTransaction(Transaction transaction);
+
+        // Swap in the list loaded from the API (the API is the source of truth for transactions).
+        void ReplaceTransactions(IEnumerable<Transaction> transactions);
+
+        // The API stores a category NAME; this returns the matching local BudgetCategory,
+        // creating one (with no limit yet) if the name is new - e.g. added from Postman.
+        BudgetCategory ResolveCategory(string name);
     }
 }

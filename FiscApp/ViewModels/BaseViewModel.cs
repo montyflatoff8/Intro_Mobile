@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using FiscApp.Services.Interfaces;
 
 namespace FiscApp.ViewModels;
 
@@ -36,4 +37,19 @@ public abstract class BaseViewModel : ObservableObject
 
     protected Task<string?> ShowPromptAsync(string title, string message, string initialValue)
         => PromptRequested?.Invoke(title, message, initialValue) ?? Task.FromResult<string?>(null);
+
+    // Shown whenever the API can't be reached at all (stopped, still starting Docker, wrong address).
+    protected const string ApiUnreachableMessage = "Can't reach the API. Is it running?";
+
+    /// <summary>
+    /// Shared reaction to a 401 from any WRITE call: the token is missing or expired, so forget
+    /// it and open the Login page with an explanation. (Not used by the Login page itself -
+    /// there, a 401 means "wrong username or password".)
+    /// </summary>
+    protected static async Task SendToLoginAsync(IAuthService auth, string message = "Please log in to make changes.")
+    {
+        await auth.LogoutAsync();
+        // Query parameter -> LoginViewModel.ApplyQueryAttributes. Escaped because it contains spaces.
+        await Shell.Current.GoToAsync($"{Routes.Login}?message={Uri.EscapeDataString(message)}");
+    }
 }

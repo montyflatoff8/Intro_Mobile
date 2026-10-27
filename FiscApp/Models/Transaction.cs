@@ -17,6 +17,10 @@ public enum TransactionType
 /// </summary>
 public class Transaction
 {
+    // Assigned by the API (SQL Server identity). 0 = not saved to the API yet.
+    // Needed so edit/delete can call PUT/DELETE api/transactions/{Id}.
+    public int Id { get; set; }
+
     public string Description { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public TransactionType Type { get; set; }

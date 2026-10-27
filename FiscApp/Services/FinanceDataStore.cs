@@ -26,20 +26,48 @@ namespace FiscApp.Services
             SeedSampleData();
         }
 
-        // Fills the store with demo goals, categories and transactions. Data is in-memory only —
-        // nothing is saved to disk, so everything resets when the app restarts.
+        // Fills the store with demo goals and categories. These stay in-memory only (they reset when
+        // the app restarts). Transactions are NOT seeded any more: they're loaded from FiscApi
+        // (see MainViewModel.LoadTransactionsAsync), so they live in SQL Server, not on the phone.
         public void SeedSampleData()
         {
             Goals.Add(new FinancialGoal { Name = "Emergency Fund", TargetAmount = 3000, CurrentAmount = 1200 });
             Goals.Add(new FinancialGoal { Name = "Vacation", TargetAmount = 1500, CurrentAmount = 450 });
 
-            var groceries = new BudgetCategory("Groceries", 400.00m);
-            var entertainment = new BudgetCategory("Entertainment", 200.00m);
-            Categories.Add(groceries);
-            Categories.Add(entertainment);
+            Categories.Add(new BudgetCategory("Groceries", 400.00m));
+            Categories.Add(new BudgetCategory("Entertainment", 200.00m));
+        }
 
-            Transactions.Add(new Transaction { Description = "Groceries", Amount = 62.18m, Type = TransactionType.Expense, Date = DateTime.Now.AddHours(-3), Category = groceries });
-            Transactions.Add(new Transaction { Description = "Paycheck", Amount = 950.00m, Type = TransactionType.Income, Date = DateTime.Now.AddDays(-1) });
+        /// <summary>
+        /// Replaces the local list with what the API returned. Clear + Add (instead of assigning a
+        /// new collection) so every page bound to Transactions - and the Budget/Reports ViewModels
+        /// listening to CollectionChanged - see the update.
+        /// </summary>
+        public void ReplaceTransactions(IEnumerable<Transaction> transactions)
+        {
+            Transactions.Clear();
+            foreach (var transaction in transactions)
+            {
+                Transactions.Add(transaction);
+            }
+        }
+
+        /// <summary>
+        /// Name -> BudgetCategory object. Budget math matches on the object reference, so every
+        /// transaction with category "Groceries" must point at the SAME BudgetCategory instance.
+        /// Unknown names get a new category with a $0 limit, which the user can edit on the Budget page.
+        /// </summary>
+        public BudgetCategory ResolveCategory(string name)
+        {
+            var existing = Categories.FirstOrDefault(c => string.Equals(c.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (existing is not null)
+            {
+                return existing;
+            }
+
+            var created = new BudgetCategory(name.Trim(), 0m);
+            Categories.Add(created);
+            return created;
         }
 
         /// <summary>

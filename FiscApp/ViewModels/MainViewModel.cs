@@ -3,7 +3,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FiscApp.Events;
 using FiscApp.Models;
+using FiscApp.Models.Api;
 using FiscApp.Services;
+using FiscApp.Services.Api;
 using FiscApp.Services.Interfaces;
 
 namespace FiscApp.ViewModels;
@@ -17,6 +19,36 @@ namespace FiscApp.ViewModels;
 public partial class MainViewModel : BaseViewModel
 {
     private readonly IFinanceDataStore store;
+    private readonly IAuthService auth;
+    private readonly ITransactionApiClient api;
+
+    // Text of the toolbar button. Refreshed every time the page appears, because logging in
+    // happens on another page and we come back here afterwards.
+    [ObservableProperty]
+    private string loginButtonText = "Log in";
+
+    // Problem loading the list (e.g. "Can't reach the API"). Empty = hidden.
+    [ObservableProperty]
+    private string statusMessage = string.Empty;
+
+    // Bound to the RefreshView's spinner (pull down on the list to reload).
+    [ObservableProperty]
+    private bool isRefreshing;
+
+    // Validation messages from the API (400), shown under the matching form field.
+    // Empty = hidden (MainPage uses an IsStringNotNullOrEmpty converter for IsVisible).
+    [ObservableProperty]
+    private string descriptionError = string.Empty;
+
+    [ObservableProperty]
+    private string amountError = string.Empty;
+
+    [ObservableProperty]
+    private string notesError = string.Empty;
+
+    // Errors that don't belong to one of the fields above (date, type, category).
+    [ObservableProperty]
+    private string formError = string.Empty;
 
     // [ObservableProperty] (from CommunityToolkit.Mvvm) generates a public "Description" property
     // with change notification from this private field — equivalent to writing out a full
@@ -70,9 +102,11 @@ public partial class MainViewModel : BaseViewModel
     public ObservableCollection<BudgetCategory> Categories => store.Categories;
     public TransactionType[] TransactionTypes { get; } = Enum.GetValues<TransactionType>();
 
-    public MainViewModel(IFinanceDataStore store)
+    public MainViewModel(IFinanceDataStore store, IAuthService auth, ITransactionApiClient api)
     {
         this.store = store;
+        this.auth = auth;
+        this.api = api;
 
         // CUSTOM EVENT SUBSCRIPTIONS (see Events/TransactionEvents.cs).
         // The gestures on MainPage never change data directly — they only RAISE these events on
@@ -83,17 +117,98 @@ public partial class MainViewModel : BaseViewModel
         store.TransactionEditRequested += OnTransactionEditRequested;
     }
 
-    // Handler for TransactionDeletedEvent: this is the ViewModel "being informed" that the user
-    // swiped to delete, and removing the transaction from the model in response.
-    private void OnTransactionDeleted(object? sender, TransactionDeletedEvent e)
+    // Called by MainPage.OnAppearing: first launch, and every time we return (e.g. from Login).
+    public async Task OnAppearingAsync()
     {
-        store.RemoveTransaction(e.Transaction);
+        LoginButtonText = await auth.IsLoggedInAsync() ? "Log out" : "Log in";
+        await LoadTransactionsAsync();
+    }
 
-        // If the deleted transaction was open in the edit form, clear the form so the user
-        // can't "save changes" to something that no longer exists.
-        if (EditingTransaction == e.Transaction)
+    // Pull-to-refresh on the list.
+    [RelayCommand]
+    private async Task Refresh()
+    {
+        await LoadTransactionsAsync();
+        IsRefreshing = false;
+    }
+
+    /// <summary>
+    /// GET api/transactions (public - works logged out) and replace the local list with it.
+    /// The API is the source of truth; the store is just what's on screen right now.
+    /// </summary>
+    private async Task LoadTransactionsAsync()
+    {
+        try
         {
-            ResetForm();
+            var result = await api.GetAllAsync();
+            if (!result.IsSuccess)
+            {
+                StatusMessage = result.ErrorMessage;
+                return;
+            }
+
+            // API order is already newest first. ResolveCategory turns "Groceries" into the
+            // local BudgetCategory object, so the Budget and Reports pages keep working.
+            store.ReplaceTransactions(result.Value!.Select(dto => dto.ToModel(store.ResolveCategory)));
+            StatusMessage = string.Empty;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+        {
+            // API stopped or still starting. Keep whatever is on screen; pull down to retry.
+            StatusMessage = ApiUnreachableMessage + " Pull down to retry.";
+        }
+    }
+
+    // Toolbar button: logged out -> open the Login page; logged in -> forget the token.
+    [RelayCommand]
+    private async Task LoginLogout()
+    {
+        if (await auth.IsLoggedInAsync())
+        {
+            await auth.LogoutAsync();
+            LoginButtonText = "Log in";
+        }
+        else
+        {
+            await Shell.Current.GoToAsync(Routes.Login);
+        }
+    }
+
+    // Handler for TransactionDeletedEvent: this is the ViewModel "being informed" that the user
+    // swiped to delete. It now asks the API to delete first, and only removes the row locally
+    // once the API agrees. ("async void" is only acceptable here because it's an event handler.)
+    private async void OnTransactionDeleted(object? sender, TransactionDeletedEvent e)
+    {
+        try
+        {
+            var result = await api.DeleteAsync(e.Transaction.Id);
+
+            if (result.IsUnauthorized)
+            {
+                // Not logged in (or token expired): nothing was deleted. Go log in, then try again.
+                await SendToLoginAsync(auth);
+                return;
+            }
+
+            if (!result.IsSuccess && !result.IsNotFound)
+            {
+                await ShowAlertAsync("Couldn't Delete", result.ErrorMessage);
+                return;
+            }
+
+            // 204 = deleted. 404 = already gone (e.g. deleted in Postman). Either way, remove it here.
+            store.RemoveTransaction(e.Transaction);
+
+            // If the deleted transaction was open in the edit form, clear the form so the user
+            // can't "save changes" to something that no longer exists.
+            if (EditingTransaction == e.Transaction)
+            {
+                ResetForm();
+            }
+        }
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+        {
+            await ShowAlertAsync("Couldn't Delete", ApiUnreachableMessage);
         }
     }
 
@@ -101,11 +216,14 @@ public partial class MainViewModel : BaseViewModel
     private void OnTransactionEditRequested(object? sender, TransactionEditRequestedEvent e)
         => PopulateFormForEdit(e.Transaction);
 
-    // Bound to the Add/Save button. Validates the form, then either replaces the transaction
-    // being edited (same list position) or inserts a new one at the top, and clears the form.
+    // Bound to the Add/Save button. Checks the form locally first (instant feedback), then sends
+    // it to the API: POST for a new transaction, PUT when editing. The list only changes once the
+    // API says it saved. AsyncRelayCommand disables the button while this runs (no double-saves).
     [RelayCommand]
     private async Task SaveTransaction()
     {
+        ClearFieldErrors();
+
         if (string.IsNullOrWhiteSpace(Description))
         {
             await ShowAlertAsync("Missing Description", "Please describe what this transaction was for.");
@@ -136,39 +254,124 @@ public partial class MainViewModel : BaseViewModel
         var trimmedNotes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
         var category = SelectedType == TransactionType.Expense ? SelectedCategory : null;
 
-        // Note how much simpler this is than the old version: because a category's spending is
-        // now CALCULATED from the Transactions collection on demand (FinanceDataStore.GetSpentAmount)
-        // instead of stored as a running total, saving a transaction here doesn't need to manually
-        // add/subtract anything from a BudgetCategory. Replacing or inserting the Transaction is
-        // the whole operation — whatever reads GetSpentAmount afterward will already see the
-        // correct number.
-        if (EditingTransaction is not null)
+        var transaction = new Transaction
         {
-            var index = Transactions.IndexOf(EditingTransaction);
-            Transactions[index] = new Transaction
+            Id = EditingTransaction?.Id ?? 0,
+            Description = Description.Trim(),
+            Amount = amount,
+            Type = SelectedType.Value,
+            Date = Date,
+            Notes = trimmedNotes,
+            Category = category
+        };
+
+        try
+        {
+            ApiResult result;
+            if (EditingTransaction is not null)
             {
-                Description = Description.Trim(),
-                Amount = amount,
-                Type = SelectedType.Value,
-                Date = Date,
-                Notes = trimmedNotes,
-                Category = category
-            };
+                // PUT api/transactions/{id} -> 204 No Content.
+                result = await api.UpdateAsync(EditingTransaction.Id, transaction.ToWriteDto());
+                if (result.IsSuccess)
+                {
+                    var index = Transactions.IndexOf(EditingTransaction);
+                    if (index >= 0)
+                    {
+                        Transactions[index] = transaction;
+                    }
+                }
+            }
+            else
+            {
+                // POST api/transactions -> 201 with the saved transaction (now with its real Id).
+                var created = await api.CreateAsync(transaction.ToWriteDto());
+                result = created;
+                if (created.IsSuccess)
+                {
+                    Transactions.Insert(0, created.Value!.ToModel(store.ResolveCategory));
+                }
+            }
+
+            if (result.IsSuccess)
+            {
+                ResetForm();
+                return;
+            }
+
+            await HandleSaveFailureAsync(result);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+        {
+            // Form is NOT cleared, so the user can retry once the API is back.
+            await ShowAlertAsync("Couldn't Save", ApiUnreachableMessage);
+        }
+    }
+
+    /// <summary>
+    /// One place that decides what each failed save means for the user. The form keeps its
+    /// values in every case, so nothing they typed is lost.
+    /// </summary>
+    private async Task HandleSaveFailureAsync(ApiResult result)
+    {
+        if (result.IsUnauthorized)
+        {
+            // Logged out or token expired. This page stays on the navigation stack underneath
+            // Login, so after logging in the form is still filled in - just tap Save again.
+            await SendToLoginAsync(auth);
+        }
+        else if (result.IsValidationError)
+        {
+            ShowFieldErrors(result.Problem?.Errors);
+        }
+        else if (result.IsConflict)
+        {
+            await ShowAlertAsync("Duplicate Transaction", result.ErrorMessage);
+        }
+        else if (result.IsNotFound)
+        {
+            // Edited something that was deleted elsewhere (e.g. in Postman): reload the real list.
+            await ShowAlertAsync("Not Found", result.ErrorMessage);
+            ResetForm();
+            await LoadTransactionsAsync();
         }
         else
         {
-            Transactions.Insert(0, new Transaction
-            {
-                Description = Description.Trim(),
-                Amount = amount,
-                Type = SelectedType.Value,
-                Date = Date,
-                Notes = trimmedNotes,
-                Category = category
-            });
+            await ShowAlertAsync("Couldn't Save", result.ErrorMessage);
+        }
+    }
+
+    /// <summary>
+    /// 400 from the API: put each message under its field. The keys are the API's JSON names
+    /// ("description", "amount", "notes") - matched ignoring case, just in case. Anything else
+    /// (date, type, category, or a body-level error) goes in the general error area.
+    /// </summary>
+    private void ShowFieldErrors(Dictionary<string, string[]>? errors)
+    {
+        if (errors is null || errors.Count == 0)
+        {
+            FormError = "Some of the values aren't valid.";
+            return;
         }
 
-        ResetForm();
+        var other = new List<string>();
+        foreach (var (key, messages) in errors)
+        {
+            var text = string.Join("\n", messages);
+            switch (key.ToLowerInvariant())
+            {
+                case "description": DescriptionError = text; break;
+                case "amount": AmountError = text; break;
+                case "notes": NotesError = text; break;
+                default: other.Add(text); break;
+            }
+        }
+
+        FormError = string.Join("\n", other);
+    }
+
+    private void ClearFieldErrors()
+    {
+        DescriptionError = AmountError = NotesError = FormError = string.Empty;
     }
 
     // Bound to the "Edit" swipe action — populates the form immediately, no confirmation needed
@@ -232,6 +435,7 @@ public partial class MainViewModel : BaseViewModel
     // Copies a transaction's values into the form and switches it into edit mode.
     private void PopulateFormForEdit(Transaction transaction)
     {
+        ClearFieldErrors();
         EditingTransaction = transaction;
         Description = transaction.Description;
         AmountText = transaction.Amount.ToString();
@@ -244,6 +448,7 @@ public partial class MainViewModel : BaseViewModel
     // Clears every field and leaves edit mode (button text goes back to "Add Transaction").
     private void ResetForm()
     {
+        ClearFieldErrors();
         EditingTransaction = null;
         Description = string.Empty;
         AmountText = string.Empty;

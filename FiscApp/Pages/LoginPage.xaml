@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Login page. Pushed on top of the current page via Shell route "Login" (Routes.Login).
+  Bound to LoginViewModel; the code-behind only sets the BindingContext.
+-->
+<ContentPage x:Class="FiscApp.Pages.LoginPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FiscApp.ViewModels"
+             x:DataType="viewmodels:LoginViewModel"
+             BackgroundColor="{DynamicResource PageBackgroundColor}"
+             Title="Log in">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,24" Spacing="16">
+
+            <Label Text="Log in to make changes"
+                   Style="{StaticResource SectionHeaderStyle}" />
+
+            <!--  Why we were sent here, e.g. "Please log in to make changes." Hidden when empty.  -->
+            <Label Text="{Binding Message}"
+                   IsVisible="{Binding HasMessage}"
+                   TextColor="{StaticResource WarningColor}"
+                   FontSize="14" />
+
+            <Border Style="{StaticResource CardStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Entry Text="{Binding Username}"
+                           Placeholder="Username"
+                           Keyboard="Plain"
+                           IsSpellCheckEnabled="False"
+                           IsTextPredictionEnabled="False"
+                           TextColor="{DynamicResource PrimaryTextColor}"
+                           PlaceholderColor="{DynamicResource SecondaryTextColor}" />
+
+                    <!--  IsPassword masks the characters. Return key submits.  -->
+                    <Entry Text="{Binding Password}"
+                           Placeholder="Password"
+                           IsPassword="True"
+                           ReturnType="Go"
+                           ReturnCommand="{Binding LoginCommand}"
+                           TextColor="{DynamicResource PrimaryTextColor}"
+                           PlaceholderColor="{DynamicResource SecondaryTextColor}" />
+
+                    <Label Text="{Binding ErrorMessage}"
+                           IsVisible="{Binding HasError}"
+                           TextColor="{StaticResource DangerColor}"
+                           FontSize="14" />
+
+                    <!--  Disabled automatically while IsBusy (LoginCommand's CanExecute).  -->
+                    <Button Text="Log in"
+                            Command="{Binding LoginCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}" />
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       Color="{StaticResource AccentColor}" />
+
+                    <Button Text="Cancel"
+                            Command="{Binding CancelCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{StaticResource AccentColor}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Browsing doesn't need a login. Adding, editing, and deleting transactions does."
+                   Style="{StaticResource CaptionStyle}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

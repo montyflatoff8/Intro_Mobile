@@ -15,6 +15,21 @@
              BackgroundColor="{DynamicResource PageBackgroundColor}"
              Title="Finance Tracker">
 
+    <!--  Top-right toolbar: "Log in" or "Log out" depending on whether a valid token is stored.  -->
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="{Binding LoginButtonText}"
+                     Command="{Binding LoginLogoutCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <!--  Converter: an error/status Label is only visible when its text isn't empty.  -->
+    <ContentPage.Resources>
+        <toolkit:IsStringNotNullOrEmptyConverter x:Key="HasText" />
+    </ContentPage.Resources>
+
+    <!--  Pull down on the list to reload transactions from the API.  -->
+    <RefreshView Command="{Binding RefreshCommand}"
+                 IsRefreshing="{Binding IsRefreshing}">
+
     <!--  Transactions list. Swipe left = Edit/Delete; long-press = details menu.
           Row commands reach the ViewModel through RootPage, since each row's context is a Transaction.  -->
     <CollectionView x:Name="TransactionsView"
@@ -64,6 +79,12 @@
                 <Label Text="Transactions"
                        Style="{StaticResource SectionHeaderStyle}" />
 
+                <!--  Load problems, e.g. "Can't reach the API. Is it running?"  -->
+                <Label Text="{Binding StatusMessage}"
+                       IsVisible="{Binding StatusMessage, Converter={StaticResource HasText}}"
+                       TextColor="{StaticResource WarningColor}"
+                       FontSize="14" />
+
                 <!--  Hint so users find the hidden gestures  -->
                 <Label Text="Tip: swipe a transaction left to edit or delete it, or long-press it for details."
                        Style="{StaticResource CaptionStyle}" />
@@ -75,11 +96,20 @@
                                Placeholder="What was it for?"
                                TextColor="{DynamicResource PrimaryTextColor}"
                                PlaceholderColor="{DynamicResource SecondaryTextColor}" />
+                        <!--  API validation errors (400) appear under their field  -->
+                        <Label Text="{Binding DescriptionError}"
+                               IsVisible="{Binding DescriptionError, Converter={StaticResource HasText}}"
+                               TextColor="{StaticResource DangerColor}"
+                               FontSize="12" />
 
                         <Entry Text="{Binding Notes}"
                                Placeholder="Notes (optional)"
                                TextColor="{DynamicResource PrimaryTextColor}"
                                PlaceholderColor="{DynamicResource SecondaryTextColor}" />
+                        <Label Text="{Binding NotesError}"
+                               IsVisible="{Binding NotesError, Converter={StaticResource HasText}}"
+                               TextColor="{StaticResource DangerColor}"
+                               FontSize="12" />
 
                         <!--  Editable date. DatePicker has no placeholder, so a "Date" label sits beside it.  -->
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" VerticalOptions="Center">
@@ -119,6 +149,16 @@
                                     ItemDisplayBinding="{Binding Name}"
                                     SelectedItem="{Binding SelectedCategory}" />
                         </Grid>
+                        <Label Text="{Binding AmountError}"
+                               IsVisible="{Binding AmountError, Converter={StaticResource HasText}}"
+                               TextColor="{StaticResource DangerColor}"
+                               FontSize="12" />
+
+                        <!--  API errors that don't belong to a single field above  -->
+                        <Label Text="{Binding FormError}"
+                               IsVisible="{Binding FormError, Converter={StaticResource HasText}}"
+                               TextColor="{StaticResource DangerColor}"
+                               FontSize="12" />
 
                         <!--  Same button for add and edit; text changes while editing  -->
                         <Button Text="{Binding SaveButtonText}"
@@ -176,5 +216,6 @@
             </DataTemplate>
         </CollectionView.ItemTemplate>
     </CollectionView>
+    </RefreshView>
 
 </ContentPage>
